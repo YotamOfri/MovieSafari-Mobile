@@ -20,6 +20,7 @@ class HorizontalMediaList extends ConsumerWidget {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: const Color(0xFF1A1C23),
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
