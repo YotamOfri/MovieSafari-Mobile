@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../providers/api_provider.dart';
-
+import '../../../providers/watch_history_provider.dart';
 
 class PlayerEpisodesList extends ConsumerWidget {
   final int id;
@@ -21,41 +21,55 @@ class PlayerEpisodesList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final historyNotifier = ref.watch(watchHistoryProvider.notifier);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text('Episodes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+          child: Text('Episodes',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white)),
         ),
         const SizedBox(height: 12),
         SizedBox(
           height: 160,
           child: ref.watch(tvSeasonDetailsProvider((id, season))).when(
             data: (seasonData) {
-              final episodes = seasonData['episodes'] as List<dynamic>? ?? [];
+              final episodes =
+                  seasonData['episodes'] as List<dynamic>? ?? [];
               if (episodes.isEmpty) {
-                return const Center(child: Text('No episodes', style: TextStyle(color: Colors.white54)));
+                return const Center(
+                    child: Text('No episodes',
+                        style: TextStyle(color: Colors.white54)));
               }
-              
+
               return ListView.separated(
                 controller: scrollController,
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 cacheExtent: 1000,
                 itemCount: episodes.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(width: 12),
                 itemBuilder: (context, index) {
                   final episode = episodes[index];
                   final int epNumber = episode['episode_number'];
-                  final String epName = episode['name'] ?? 'Episode $epNumber';
+                  final String epName =
+                      episode['name'] ?? 'Episode $epNumber';
                   final String? epStill = episode['still_path'];
                   final bool isSelected = currentEpisode == epNumber;
-                  
+                  final bool isWatched =
+                      historyNotifier.isEpisodeFinished(id, season, epNumber);
+
                   return GestureDetector(
                     onTap: () {
                       if (!isSelected) {
-                        context.pushReplacement('/player/tv/$id?season=$season&episode=$epNumber');
+                        context.pushReplacement(
+                            '/player/tv/$id?season=$season&episode=$epNumber');
                       }
                     },
                     child: Container(
@@ -63,14 +77,19 @@ class PlayerEpisodesList extends ConsumerWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isSelected ? Colors.blueAccent : Colors.transparent,
+                          color: isSelected
+                              ? Colors.blueAccent
+                              : isWatched
+                                  ? Colors.greenAccent.withOpacity(0.4)
+                                  : Colors.transparent,
                           width: 2,
                         ),
                         color: const Color(0xFF1A1C23),
                         image: epStill != null
                             ? DecorationImage(
                                 image: ResizeImage(
-                                  NetworkImage('https://image.tmdb.org/t/p/w300$epStill'),
+                                  NetworkImage(
+                                      'https://image.tmdb.org/t/p/w300$epStill'),
                                   width: 400,
                                 ),
                                 fit: BoxFit.cover,
@@ -80,13 +99,17 @@ class PlayerEpisodesList extends ConsumerWidget {
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
-                          color: isSelected ? Colors.blueAccent.withValues(alpha: 0.2) : null,
+                          color: isSelected
+                              ? Colors.blueAccent.withOpacity(0.2)
+                              : isWatched
+                                  ? Colors.black.withOpacity(0.4)
+                                  : null,
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withValues(alpha: 0.9),
+                              Colors.black.withOpacity(0.9),
                             ],
                             stops: const [0.4, 1.0],
                           ),
@@ -95,7 +118,18 @@ class PlayerEpisodesList extends ConsumerWidget {
                           fit: StackFit.expand,
                           children: [
                             if (epStill == null)
-                              const Center(child: Icon(Icons.tv, color: Colors.white54)),
+                              const Center(
+                                  child:
+                                      Icon(Icons.tv, color: Colors.white54)),
+
+                            // Watched dimming overlay
+                            if (isWatched && !isSelected)
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.black.withOpacity(0.35),
+                                ),
+                              ),
 
                             Positioned(
                               bottom: 12,
@@ -107,12 +141,35 @@ class PlayerEpisodesList extends ConsumerWidget {
                                   if (isSelected)
                                     const Text(
                                       'Now Playing',
-                                      style: TextStyle(color: Colors.blueAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                          color: Colors.blueAccent,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold),
+                                    )
+                                  else if (isWatched)
+                                    Row(
+                                      children: const [
+                                        Icon(Icons.check_circle,
+                                            color: Colors.greenAccent,
+                                            size: 12),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Watched',
+                                          style: TextStyle(
+                                              color: Colors.greenAccent,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
                                     ),
                                   Text(
                                     '$epNumber. $epName',
                                     style: TextStyle(
-                                      color: isSelected ? Colors.blueAccent : Colors.white,
+                                      color: isSelected
+                                          ? Colors.blueAccent
+                                          : isWatched
+                                              ? Colors.white60
+                                              : Colors.white,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                     ),
@@ -122,12 +179,22 @@ class PlayerEpisodesList extends ConsumerWidget {
                                 ],
                               ),
                             ),
+
+                            // Center icon
                             if (isSelected)
                               const Center(
                                 child: HugeIcon(
                                   icon: HugeIcons.strokeRoundedPlayCircle,
                                   color: Colors.blueAccent,
                                   size: 40,
+                                ),
+                              )
+                            else if (isWatched)
+                              Center(
+                                child: Icon(
+                                  Icons.check_circle_outline,
+                                  color: Colors.greenAccent.withOpacity(0.6),
+                                  size: 36,
                                 ),
                               ),
                           ],
@@ -138,8 +205,11 @@ class PlayerEpisodesList extends ConsumerWidget {
                 },
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => const Center(child: Text('Error loading episodes', style: TextStyle(color: Colors.white54))),
+            loading: () =>
+                const Center(child: CircularProgressIndicator()),
+            error: (_, __) => const Center(
+                child: Text('Error loading episodes',
+                    style: TextStyle(color: Colors.white54))),
           ),
         ),
       ],

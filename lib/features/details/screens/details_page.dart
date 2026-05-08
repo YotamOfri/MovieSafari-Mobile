@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../providers/api_provider.dart';
 import '../../../providers/bookmark_provider.dart';
+import '../../../providers/watch_history_provider.dart';
 import '../../../widgets/tmdb_image.dart';
 import '../../home/widgets/horizontal_media_list.dart';
 import '../widgets/video_player_view.dart';
@@ -381,6 +382,10 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
                     final String? epStill = episode['still_path'];
                     final String? overview = episode['overview'];
                     final String? airDate = episode['air_date'];
+                    final bool isWatched = ref
+                        .read(watchHistoryProvider.notifier)
+                        .isEpisodeFinished(
+                            widget.id, _selectedSeason, epNumber);
 
                     return GestureDetector(
                       onTap: () {
@@ -433,7 +438,43 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
                                 ),
                               ),
 
-                              // Content Overlay
+                              // Watched dimming overlay
+                              if (isWatched)
+                                Container(
+                                    color: Colors.black.withOpacity(0.35)),
+
+                              // Watched badge (top-right)
+                              if (isWatched)
+                                Positioned(
+                                  top: 12,
+                                  right: 12,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.greenAccent.withOpacity(0.9),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.check,
+                                            color: Colors.black, size: 12),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Watched',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
                               Positioned(
                                 bottom: 16,
                                 left: 16,
