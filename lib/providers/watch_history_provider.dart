@@ -153,11 +153,31 @@ class WatchHistoryNotifier extends Notifier<List<WatchedEntry>> {
   Future<void> markFinished({
     required int id,
     required String mediaType,
+    String? title,
+    String? posterPath,
     int? season,
     int? episode,
   }) async {
     final idx = state.indexWhere((e) => e.id == id && e.mediaType == mediaType);
-    if (idx == -1) return;
+
+    if (idx == -1) {
+      // Create new entry if it doesn't exist
+      if (title == null) return; // Need title to create
+      final entry = WatchedEntry(
+        id: id,
+        mediaType: mediaType,
+        title: title,
+        posterPath: posterPath,
+        isFinished: true,
+        finishedEpisodes:
+            mediaType == 'tv' && season != null && episode != null
+                ? {'${season}_$episode'}
+                : const {},
+      );
+      state = [entry, ...state];
+      await _save();
+      return;
+    }
 
     final entry = state[idx];
     Set<String> finished = Set<String>.from(entry.finishedEpisodes);
@@ -167,7 +187,7 @@ class WatchHistoryNotifier extends Notifier<List<WatchedEntry>> {
     }
 
     final updated = entry.copyWith(
-      isFinished: mediaType == 'movie' ? true : entry.isFinished,
+      isFinished: true, // Manually marking as finished
       finishedEpisodes: finished,
     );
 
@@ -175,6 +195,43 @@ class WatchHistoryNotifier extends Notifier<List<WatchedEntry>> {
     newList[idx] = updated;
     state = newList;
     await _save();
+  }
+
+  Future<void> toggleFinished({
+    required int id,
+    required String mediaType,
+    String? title,
+    String? posterPath,
+  }) async {
+    final entry = getEntry(id, mediaType);
+    if (entry != null && entry.isFinished) {
+      // Unmark
+      final idx =
+          state.indexWhere((e) => e.id == id && e.mediaType == mediaType);
+
+      // If it's a movie OR a TV series with no individual episodes finished,
+      // remove it from history entirely to keep it clean.
+      if (mediaType == 'movie' || entry.finishedEpisodes.isEmpty) {
+        final newList = List<WatchedEntry>.from(state);
+        newList.removeAt(idx);
+        state = newList;
+      } else {
+        // Just unmark as finished but keep in history (since they watched some eps)
+        final updated = state[idx].copyWith(isFinished: false);
+        final newList = List<WatchedEntry>.from(state);
+        newList[idx] = updated;
+        state = newList;
+      }
+      await _save();
+    } else {
+      // Mark
+      await markFinished(
+        id: id,
+        mediaType: mediaType,
+        title: title,
+        posterPath: posterPath,
+      );
+    }
   }
 
   WatchedEntry? getEntry(int id, String mediaType) {

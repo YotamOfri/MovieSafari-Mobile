@@ -143,9 +143,12 @@ class MediaContextMenu {
                 label: isFinished ? 'Mark as Unwatched' : 'Mark as Watched',
                 color: Colors.greenAccent,
                 onTap: () {
-                  if (!isFinished) {
-                    historyNotifier.markFinished(id: id, mediaType: type);
-                  }
+                  historyNotifier.toggleFinished(
+                    id: id,
+                    mediaType: type,
+                    title: title,
+                    posterPath: posterPath,
+                  );
                   Navigator.pop(sheetContext);
                 },
               ),

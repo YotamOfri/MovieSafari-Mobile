@@ -223,7 +223,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 
   Widget _buildResultsGrid(List<dynamic> results) {
-    final historyNotifier = ref.watch(watchHistoryProvider.notifier);
+    final history = ref.watch(watchHistoryProvider);
 
     return GridView.builder(
       padding: const EdgeInsets.only(top: 8, bottom: 24),
@@ -247,7 +247,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         final Color badgeColor =
             mediaType == 'movie' ? Colors.purpleAccent : Colors.blueAccent;
 
-        final entry = historyNotifier.getEntry(id, mediaType);
+        final entry = history.cast<WatchedEntry?>().firstWhere(
+            (e) => e?.id == id && e?.mediaType == mediaType,
+            orElse: () => null);
         final bool isFinished = entry?.isFinished ?? false;
 
         return PressableCard(

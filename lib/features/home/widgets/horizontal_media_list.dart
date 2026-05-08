@@ -16,7 +16,7 @@ class HorizontalMediaList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final historyNotifier = ref.watch(watchHistoryProvider.notifier);
+    final history = ref.watch(watchHistoryProvider);
 
     return ListView.builder(
       scrollDirection: Axis.horizontal,
@@ -27,7 +27,9 @@ class HorizontalMediaList extends ConsumerWidget {
         final String? posterPath = item['poster_path'];
         final int id = item['id'];
         final String type = item['media_type'] ?? defaultType ?? 'tv';
-        final entry = historyNotifier.getEntry(id, type);
+        final entry = history.cast<WatchedEntry?>().firstWhere(
+            (e) => e?.id == id && e?.mediaType == type,
+            orElse: () => null);
         final bool isFinished = entry?.isFinished ?? false;
 
         return Padding(
