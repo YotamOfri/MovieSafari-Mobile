@@ -12,25 +12,26 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final moviesAsync = ref.watch(trendingMoviesProvider);
-    final seriesAsync = ref.watch(trendingSeriesProvider);
-    final history = ref.watch(watchHistoryProvider);
-    final continueWatching = ref
-        .read(watchHistoryProvider.notifier)
-        .continueWatching;
+    final moviesAsync = ref.watch(filteredMoviesProvider);
+    final seriesAsync = ref.watch(filteredSeriesProvider);
+    final heroSeriesAsync = ref.watch(trendingSeriesProvider); // hero always trending
+    final continueWatching =
+        ref.read(watchHistoryProvider.notifier).continueWatching;
+    final selectedGenre = ref.watch(selectedGenreProvider);
 
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(trendingMoviesProvider);
+          ref.invalidate(filteredMoviesProvider);
+          ref.invalidate(filteredSeriesProvider);
           ref.invalidate(trendingSeriesProvider);
         },
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Hero Section
-              seriesAsync.when(
+              // Hero Section (always trending, genre doesn't affect hero)
+              heroSeriesAsync.when(
                 data: (series) {
                   if (series.isEmpty) return const SizedBox.shrink();
                   final heroId = series.first['id'];
@@ -43,6 +44,31 @@ class HomePage extends ConsumerWidget {
                 },
                 loading: () => const HeroLoadingPlaceholder(),
                 error: (e, s) => const SizedBox(height: 500),
+              ),
+
+              // Genre Filter Chips
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 36,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    _GenreChip(
+                        label: 'All',
+                        isSelected: selectedGenre == null,
+                        onTap: () => ref
+                            .read(selectedGenreProvider.notifier)
+                            .select(null)),
+                    ...tmdbGenres.entries.map((entry) => _GenreChip(
+                          label: entry.value,
+                          isSelected: selectedGenre == entry.key,
+                          onTap: () => ref
+                              .read(selectedGenreProvider.notifier)
+                              .select(entry.key),
+                        )),
+                  ],
+                ),
               ),
 
               // Continue Watching Section
@@ -66,8 +92,10 @@ class HomePage extends ConsumerWidget {
 
               const SizedBox(height: 32),
 
-              // Trending Movies
-              _buildSectionTitle('Trending Movies'),
+              // Movies Section
+              _buildSectionTitle(selectedGenre == null
+                  ? 'Trending Movies'
+                  : '${tmdbGenres[selectedGenre]} Movies'),
               const SizedBox(height: 16),
               SizedBox(
                 height: 200,
@@ -80,8 +108,10 @@ class HomePage extends ConsumerWidget {
 
               const SizedBox(height: 32),
 
-              // Trending Series
-              _buildSectionTitle('Trending Series'),
+              // Series Section
+              _buildSectionTitle(selectedGenre == null
+                  ? 'Trending Series'
+                  : '${tmdbGenres[selectedGenre]} Series'),
               const SizedBox(height: 16),
               SizedBox(
                 height: 200,
@@ -199,6 +229,47 @@ class _ContinueWatchingCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GenreChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _GenreChip(
+      {required this.label, required this.isSelected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(right: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.blueAccent
+              : Colors.white.withOpacity(0.07),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? Colors.blueAccent
+                : Colors.white.withOpacity(0.1),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.white60,
+            fontWeight:
+                isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 13,
           ),
         ),
       ),

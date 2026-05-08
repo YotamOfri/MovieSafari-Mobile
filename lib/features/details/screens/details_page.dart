@@ -334,6 +334,57 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
               icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
               isExpanded: true,
               style: const TextStyle(color: Colors.white, fontSize: 16),
+              selectedItemBuilder: (context) => validSeasons.map((season) {
+                final int seasonNum = season['season_number'];
+                final int total = season['episode_count'] as int? ?? 0;
+                final entry = ref
+                    .read(watchHistoryProvider.notifier)
+                    .getEntry(widget.id, 'tv');
+                final watched = entry == null
+                    ? 0
+                    : List.generate(total, (i) => i + 1)
+                        .where((ep) =>
+                            entry.isEpisodeFinished(seasonNum, ep))
+                        .length;
+                final progress = total > 0 ? watched / total : 0.0;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      season['name'] ?? 'Season $seasonNum',
+                      style: const TextStyle(
+                          color: Colors.white, fontSize: 15),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 3,
+                              backgroundColor:
+                                  Colors.white.withOpacity(0.1),
+                              valueColor:
+                                  const AlwaysStoppedAnimation<Color>(
+                                      Colors.blueAccent),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '$watched/$total',
+                          style: const TextStyle(
+                              color: Colors.grey, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              }).toList(),
               items: validSeasons.map((season) {
                 return DropdownMenuItem<int>(
                   value: season['season_number'],

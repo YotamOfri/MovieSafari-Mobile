@@ -238,6 +238,32 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   ),
                   orElse: () => const SizedBox(),
                 ),
+                // Next Episode button (TV only)
+                if (widget.type == 'tv')
+                  detailsAsync.maybeWhen(
+                    data: (details) {
+                      final seasons = details['seasons'] as List<dynamic>? ?? [];
+                      final currentSeasonData = seasons.firstWhere(
+                        (s) => s['season_number'] == widget.season,
+                        orElse: () => null,
+                      );
+                      final totalEpisodes =
+                          currentSeasonData?['episode_count'] as int? ?? 0;
+                      final hasNext = widget.episode < totalEpisodes;
+                      if (!hasNext) return const SizedBox();
+                      return IconButton(
+                        tooltip: 'Next Episode',
+                        icon: const Icon(Icons.skip_next_rounded,
+                            color: Colors.white, size: 26),
+                        onPressed: () {
+                          context.pushReplacement(
+                            '/player/tv/${widget.id}?season=${widget.season}&episode=${widget.episode + 1}',
+                          );
+                        },
+                      );
+                    },
+                    orElse: () => const SizedBox(),
+                  ),
               ],
             ),
 
@@ -248,6 +274,11 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                 thumbnailPath: details['backdrop_path'] as String? ??
                     details['poster_path'] as String?,
                 onPlayPressed: () => _onPlayPressed(details),
+                allServers: servers,
+                currentServerIndex: _selectedServerIndex,
+                onServerSwitch: (index) {
+                  setState(() => _selectedServerIndex = index);
+                },
               ),
               loading: () => const AspectRatio(
                 aspectRatio: 16 / 9,

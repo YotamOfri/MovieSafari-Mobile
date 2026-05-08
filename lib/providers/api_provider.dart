@@ -87,3 +87,53 @@ final searchResultsProvider = FutureProvider<List<dynamic>>((ref) async {
   // Filter out 'person' media types as requested
   return results.where((item) => item['media_type'] != 'person').toList();
 });
+
+// Genre filter state: null = show all (trending)
+class _GenreNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  void select(int? genreId) => state = genreId;
+}
+
+final selectedGenreProvider = NotifierProvider<_GenreNotifier, int?>(
+  _GenreNotifier.new,
+);
+
+// TMDB genre map (movie genres — TV shares most)
+const tmdbGenres = {
+  28: 'Action',
+  35: 'Comedy',
+  18: 'Drama',
+  27: 'Horror',
+  878: 'Sci-Fi',
+  10749: 'Romance',
+  16: 'Animation',
+  53: 'Thriller',
+};
+
+// Genre-filtered movies
+final filteredMoviesProvider = FutureProvider<List<dynamic>>((ref) async {
+  final genreId = ref.watch(selectedGenreProvider);
+  final api = ref.watch(apiServiceProvider);
+  if (genreId == null) {
+    final response = await api.dio.get('/trending/movie/week?language=en-US');
+    return response.data['results'] as List<dynamic>;
+  }
+  final response = await api.dio.get(
+      '/discover/movie?with_genres=$genreId&sort_by=popularity.desc&language=en-US&page=1');
+  return response.data['results'] as List<dynamic>;
+});
+
+// Genre-filtered series
+final filteredSeriesProvider = FutureProvider<List<dynamic>>((ref) async {
+  final genreId = ref.watch(selectedGenreProvider);
+  final api = ref.watch(apiServiceProvider);
+  if (genreId == null) {
+    final response = await api.dio.get('/trending/tv/week?language=en-US');
+    return response.data['results'] as List<dynamic>;
+  }
+  final response = await api.dio.get(
+      '/discover/tv?with_genres=$genreId&sort_by=popularity.desc&language=en-US&page=1');
+  return response.data['results'] as List<dynamic>;
+});
