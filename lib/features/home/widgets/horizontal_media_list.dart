@@ -34,7 +34,7 @@ class HorizontalMediaList extends ConsumerWidget {
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Container(
+      builder: (sheetContext) => Container(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -137,7 +137,7 @@ class HorizontalMediaList extends ConsumerWidget {
                     title: title,
                     mediaType: type,
                     posterPath: posterPath));
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
               },
             ),
             _ContextAction(
@@ -151,7 +151,7 @@ class HorizontalMediaList extends ConsumerWidget {
                   // If we want to allow un-marking, we'd need a way in the provider
                   // For now, let's just keep it consistent.
                 }
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
               },
             ),
             _ContextAction(
@@ -159,7 +159,7 @@ class HorizontalMediaList extends ConsumerWidget {
               label: 'View Full Details',
               color: Colors.white70,
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
                 context.push('/details/$type/$id');
               },
             ),
