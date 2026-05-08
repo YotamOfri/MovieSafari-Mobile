@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../providers/bookmark_provider.dart';
@@ -199,10 +200,12 @@ class HorizontalMediaList extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: GestureDetector(
+                child: _PressableCard(
                   onTap: () => context.push('/details/$type/$id'),
-                  onLongPress: () => _showContextMenu(
-                      context, ref, item, type, isFinished),
+                  onLongPress: () {
+                    HapticFeedback.heavyImpact();
+                    _showContextMenu(context, ref, item, type, isFinished);
+                  },
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: AspectRatio(
@@ -269,6 +272,42 @@ class HorizontalMediaList extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _PressableCard extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  const _PressableCard({
+    required this.child,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  State<_PressableCard> createState() => _PressableCardState();
+}
+
+class _PressableCardState extends State<_PressableCard> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
+      child: AnimatedScale(
+        scale: _isPressed ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
+      ),
     );
   }
 }
