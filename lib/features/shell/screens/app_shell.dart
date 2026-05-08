@@ -9,7 +9,8 @@ class AppShell extends StatelessWidget {
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.path;
     if (location.startsWith('/search')) return 1;
-    if (location.startsWith('/profile')) return 2;
+    if (location.startsWith('/bookmarks')) return 2;
+    if (location.startsWith('/profile')) return 3;
     return 0;
   }
 
@@ -49,8 +50,13 @@ class AppShell extends StatelessWidget {
                   onTap: () => context.go('/search'),
                 ),
                 _NavBarItem(
-                  icon: HugeIcons.strokeRoundedUserCircle,
+                  icon: HugeIcons.strokeRoundedBookmark01,
                   isSelected: currentIndex == 2,
+                  onTap: () => context.go('/bookmarks'),
+                ),
+                _NavBarItem(
+                  icon: HugeIcons.strokeRoundedUserCircle,
+                  isSelected: currentIndex == 3,
                   onTap: () => context.go('/profile'),
                 ),
               ],

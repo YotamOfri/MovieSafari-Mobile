@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_app/features/home/screens/home_page.dart';
 import 'package:flutter_app/features/search/screens/search_page.dart';
 import 'package:flutter_app/features/profile/screens/profile_page.dart';
+import 'package:flutter_app/features/bookmarks/screens/bookmarks_page.dart';
 import 'package:flutter_app/features/shell/screens/app_shell.dart';
 import 'package:flutter_app/features/details/screens/details_page.dart';
 import 'package:flutter_app/features/details/screens/player_page.dart';
@@ -63,6 +64,11 @@ final _router = GoRouter(
           path: '/search',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: SearchPage()),
+        ),
+        GoRoute(
+          path: '/bookmarks',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: BookmarksPage()),
         ),
         GoRoute(
           path: '/profile',

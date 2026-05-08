@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../providers/api_provider.dart';
+import '../../../providers/bookmark_provider.dart';
 import '../../../widgets/tmdb_image.dart';
 import '../../home/widgets/horizontal_media_list.dart';
 import '../widgets/video_player_view.dart';
@@ -48,6 +49,15 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
                   ),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
+                actions: [
+                  _BookmarkButton(
+                    id: widget.id,
+                    type: widget.type,
+                    title: details['title'] ?? details['name'] ?? 'Unknown',
+                    posterPath: details['poster_path'],
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 flexibleSpace: FlexibleSpaceBar(
                   background: Stack(
                     fit: StackFit.expand,
@@ -510,6 +520,60 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
                   Center(child: Text('Error loading episodes: $e')),
             ),
       ],
+    );
+  }
+}
+
+class _BookmarkButton extends ConsumerWidget {
+  final int id;
+  final String type;
+  final String title;
+  final String? posterPath;
+
+  const _BookmarkButton({
+    required this.id,
+    required this.type,
+    required this.title,
+    this.posterPath,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bookmarks = ref.watch(bookmarkProvider);
+    final isBookmarked = ref
+        .read(bookmarkProvider.notifier)
+        .isBookmarked(id, type);
+
+    return IconButton(
+      icon: HugeIcon(
+        icon: isBookmarked
+            ? HugeIcons.strokeRoundedBookmark02
+            : HugeIcons.strokeRoundedBookmark01,
+        color: isBookmarked ? Colors.blueAccent : Colors.white,
+      ),
+      onPressed: () {
+        ref.read(bookmarkProvider.notifier).toggleBookmark(
+              Bookmark(
+                id: id,
+                title: title,
+                mediaType: type,
+                posterPath: posterPath,
+              ),
+            );
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFF1A1C23),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      },
     );
   }
 }
