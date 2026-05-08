@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../providers/api_provider.dart';
 import '../../../providers/search_history_provider.dart';
+import '../../../providers/watch_history_provider.dart';
 import '../../../widgets/tmdb_image.dart';
+import '../../../widgets/media_context_menu.dart';
+import '../../../widgets/pressable_card.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -219,6 +223,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 
   Widget _buildResultsGrid(List<dynamic> results) {
+    final historyNotifier = ref.watch(watchHistoryProvider.notifier);
+
     return GridView.builder(
       padding: const EdgeInsets.only(top: 8, bottom: 24),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -241,14 +247,65 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         final Color badgeColor =
             mediaType == 'movie' ? Colors.purpleAccent : Colors.blueAccent;
 
-        return GestureDetector(
+        final entry = historyNotifier.getEntry(id, mediaType);
+        final bool isFinished = entry?.isFinished ?? false;
+
+        return PressableCard(
           onTap: () => context.push('/details/$mediaType/$id'),
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            MediaContextMenu.show(context, ref, item, mediaType);
+          },
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Stack(
               fit: StackFit.expand,
               children: [
                 TmdbImage(path: posterPath, highResSize: 'w400'),
+
+                // Watched badge (top-right)
+                if (isFinished)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.greenAccent.withOpacity(0.85),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check, color: Colors.black, size: 10),
+                          SizedBox(width: 3),
+                          Text('Watched',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              )),
+                        ],
+                      ),
+                    ),
+                  )
+                else if (entry != null)
+                  // In-progress blue dot
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: Colors.blueAccent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                    ),
+                  ),
+
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -282,8 +339,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            HugeIcon(
-                                icon: icon, size: 14, color: badgeColor),
+                            HugeIcon(icon: icon, size: 14, color: badgeColor),
                             const SizedBox(width: 4),
                             Text(displayType,
                                 style: TextStyle(
