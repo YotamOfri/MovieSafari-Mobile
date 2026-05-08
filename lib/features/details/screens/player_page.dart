@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import '../../../core/server_constants.dart';
 import '../../../providers/api_provider.dart';
 import '../../../widgets/tmdb_image.dart';
 import '../widgets/player_about_section.dart';
@@ -58,27 +59,12 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     super.dispose();
   }
 
-  List<String> _getServers(String type, int id, int season, int episode) {
-    if (type == 'tv') {
-      return [
-        'https://vidsrc.cc/v2/embed/tv/$id/$season/$episode',
-        'https://vidsrc.icu/embed/tv/$id/$season/$episode',
-        'https://multiembed.mov/directstream.php?video_id=$id&tmdb=1&s=$season&e=$episode',
-        'https://vidsrc.me/embed/tv?tmdb=$id&season=$season&episode=$episode',
-      ];
-    } else {
-      return [
-        'https://vidsrc.cc/v2/embed/movie/$id',
-        'https://vidsrc.icu/embed/movie/$id',
-        'https://multiembed.mov/?video_id=$id&tmdb=1',
-        'https://vidsrc.me/embed/movie?tmdb=$id',
-      ];
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    final servers = _getServers(widget.type, widget.id, widget.season, widget.episode);
+    final servers = widget.type == 'tv' 
+        ? ServerConstants.getTvServers(widget.id, widget.season, widget.episode)
+        : ServerConstants.getMovieServers(widget.id);
     final currentServerUrl = servers[_selectedServerIndex];
 
     final detailsAsync = widget.type == 'movie'

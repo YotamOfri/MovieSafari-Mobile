@@ -39,13 +39,16 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
         NavigationDelegate(
           onNavigationRequest: (NavigationRequest request) {
             final url = request.url.toLowerCase();
-            // Whitelist the known streaming domains.
-            // If the WebView tries to navigate to an ad or popup, this will block it entirely.
-            if (url.contains('vidsrc') || url.contains('multiembed')) {
+            // Whitelist the known streaming domains and the requested 'streamingnow' domain
+            if (url.contains('vidsrc') ||
+                url.contains('multiembed') ||
+                url.contains('moviesapi') ||
+                url.contains('vidfast') ||
+                url.contains('streamingnow')) {
               return NavigationDecision.navigate;
             }
-            
-            // Block anything else
+
+            // Block everything else
             debugPrint('Blocked ad popup/redirect: $url');
             return NavigationDecision.prevent;
           },
