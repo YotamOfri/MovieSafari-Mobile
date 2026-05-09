@@ -49,7 +49,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     _prevSeason = widget.season;
     _prevEpisode = widget.episode;
 
-    // Updated for new card width (240) + spacing (16)
     final double initialOffset = (widget.episode - 1) * 256.0;
     _episodesScrollController = ScrollController(
       initialScrollOffset: initialOffset,
@@ -134,26 +133,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     });
   }
 
-  void _manualMarkFinished() {
-    _finishTimer?.cancel();
-    _autoFinished = true;
-    ref.read(watchHistoryProvider.notifier).markFinished(
-          id: widget.id,
-          mediaType: widget.type,
-          season: widget.season,
-          episode: widget.episode,
-        );
-    
-    MiniToast.show(
-      context: context,
-      message: widget.type == 'tv' ? 'Episode marked as watched' : 'Movie marked as watched',
-      icon: Icons.check_circle_rounded,
-      color: Colors.greenAccent,
-    );
-    
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     final servers = widget.type == 'tv'
@@ -182,7 +161,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
 
           return Stack(
             children: [
-              // 1. Immersive Blurred Backdrop
               if (backdrop != null)
                 Positioned.fill(
                   child: ImageFiltered(
@@ -198,7 +176,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   ),
                 ),
 
-              // 2. Cinematic Shadow Dissolve (Matched to Details Page)
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -219,20 +196,17 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                 ),
               ),
 
-              // 3. Main Content
               SafeArea(
                 bottom: false,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Glassmorphic Top Bar
                     _PlayerTopBar(
                       title: widget.type == 'tv'
                           ? '${details['name'] ?? 'Playing'} · S${widget.season}E${widget.episode}'
                           : details['title'] ?? 'Playing',
                     ),
 
-                    // Video Player
                     VideoPlayerView(
                       serverUrl: currentServerUrl,
                       thumbnailPath:
@@ -246,7 +220,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                       },
                     ),
 
-                    // Content Below Player
                     Expanded(
                       child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
@@ -255,7 +228,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                           children: [
                             const SizedBox(height: 20),
 
-                            // NEW: Action Controls Row
                             _PlayerControlsRow(
                               isFinished: isCurrentFinished,
                               type: widget.type,
@@ -267,7 +239,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
 
                             const SizedBox(height: 24),
 
-                            // Servers Section
                             PlayerServersList(
                               servers: servers,
                               selectedIndex: _selectedServerIndex,
@@ -278,7 +249,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
 
                             const SizedBox(height: 32),
 
-                            // TV Episodes
                             if (widget.type == 'tv') ...[
                               PlayerEpisodesList(
                                 id: widget.id,
@@ -289,7 +259,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                               const SizedBox(height: 32),
                             ],
 
-                            // About Section
                             PlayerAboutSection(details: details),
                             const SizedBox(height: 48),
                           ],
@@ -376,8 +345,35 @@ class _PlayerControlsRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final shouldShowNext = type == 'tv' && _shouldShowNextButton(details, season, episode);
+    final seasons = details['seasons'] as List<dynamic>? ?? [];
+    final currentSeasonData = seasons.firstWhere(
+      (s) => s['season_number'] == season,
+      orElse: () => null,
+    );
+    final totalEpisodes = currentSeasonData?['episode_count'] as int? ?? 0;
+    final bool hasNextInSeason = episode < totalEpisodes;
     
+    final int currentIndex = seasons.indexWhere((s) => s['season_number'] == season);
+    Map<String, dynamic>? nextSeasonData;
+    if (currentIndex != -1) {
+      for (int i = currentIndex + 1; i < seasons.length; i++) {
+        if ((seasons[i]['episode_count'] ?? 0) > 0) {
+          nextSeasonData = seasons[i];
+          break;
+        }
+      }
+    }
+    
+    final bool hasNextSeason = nextSeasonData != null;
+    final bool shouldShowNext = type == 'tv' && (hasNextInSeason || hasNextSeason);
+    
+    final int? nextS = (hasNextInSeason || hasNextSeason) 
+        ? (hasNextInSeason ? season : (nextSeasonData?['season_number'] as int?))
+        : null;
+    final int? nextE = (hasNextInSeason || hasNextSeason)
+        ? (hasNextInSeason ? episode + 1 : 1)
+        : null;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -398,6 +394,17 @@ class _PlayerControlsRow extends ConsumerWidget {
                     season: season,
                     episode: episode,
                   );
+                  
+                  if (!isFinished && nextS != null && nextE != null) {
+                    ref.read(watchHistoryProvider.notifier).markFinished(
+                      id: id,
+                      mediaType: type,
+                      season: season,
+                      episode: episode,
+                      nextSeason: nextS,
+                      nextEpisode: nextE,
+                    );
+                  }
                   
                   final isNowWatched = !isFinished;
                   MiniToast.show(
@@ -420,7 +427,6 @@ class _PlayerControlsRow extends ConsumerWidget {
               isExpanded: true,
             ),
           ] else ...[
-            // Single button centered with fixed proportional width
             SizedBox(
               width: MediaQuery.of(context).size.width * 0.5,
               child: _GlassActionChip(
@@ -453,28 +459,6 @@ class _PlayerControlsRow extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  bool _shouldShowNextButton(Map<String, dynamic> details, int season, int episode) {
-    final seasons = details['seasons'] as List<dynamic>? ?? [];
-    final currentSeasonData = seasons.firstWhere(
-      (s) => s['season_number'] == season,
-      orElse: () => null,
-    );
-    final totalEpisodes = currentSeasonData?['episode_count'] as int? ?? 0;
-    
-    // More episodes in current season
-    if (episode < totalEpisodes) return true;
-    
-    // OR there is a next season in the list
-    final currentIndex = seasons.indexWhere((s) => s['season_number'] == season);
-    if (currentIndex != -1 && currentIndex < seasons.length - 1) {
-      for (int i = currentIndex + 1; i < seasons.length; i++) {
-        if ((seasons[i]['episode_count'] ?? 0) > 0) return true;
-      }
-    }
-    
-    return false;
   }
 }
 
@@ -588,12 +572,10 @@ class _NextEpisodeButton extends ConsumerWidget {
     final totalEpisodes = currentSeasonData?['episode_count'] as int? ?? 0;
     final bool hasNextInSeason = currentEpisode < totalEpisodes;
 
-    // Find the current season's position in the list
     final int currentIndex = seasons.indexWhere(
       (s) => s['season_number'] == currentSeason,
     );
 
-    // Look for the next season in the list that has episodes
     Map<String, dynamic>? nextSeasonData;
     if (currentIndex != -1) {
       for (int i = currentIndex + 1; i < seasons.length; i++) {
@@ -607,7 +589,6 @@ class _NextEpisodeButton extends ConsumerWidget {
 
     final bool hasNextSeason = nextSeasonData != null;
     if (!hasNextInSeason && !hasNextSeason) return const SizedBox();
-
     final bool isNextSeason = !hasNextInSeason && hasNextSeason;
     final String label = isNextSeason ? 'Next Season' : 'Next Episode';
     final int targetSeason = isNextSeason
@@ -616,12 +597,13 @@ class _NextEpisodeButton extends ConsumerWidget {
     final int targetEpisode = isNextSeason ? 1 : currentEpisode + 1;
 
     void navigateToNext() {
-      // AUTO-MARK current episode as watched before moving
       ref.read(watchHistoryProvider.notifier).markFinished(
         id: id,
         mediaType: 'tv',
         season: currentSeason,
         episode: currentEpisode,
+        nextSeason: targetSeason,
+        nextEpisode: targetEpisode,
       );
 
       context.pushReplacement(

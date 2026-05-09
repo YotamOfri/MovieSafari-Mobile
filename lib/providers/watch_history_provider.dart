@@ -155,18 +155,21 @@ class WatchHistoryNotifier extends Notifier<List<WatchedEntry>> {
     String? posterPath,
     int? season,
     int? episode,
+    int? nextSeason,
+    int? nextEpisode,
   }) async {
     final idx = state.indexWhere((e) => e.id == id && e.mediaType == mediaType);
 
     if (idx == -1) {
-      // Create new entry if it doesn't exist
-      if (title == null) return; // Need title to create
+      if (title == null) return;
       final entry = WatchedEntry(
         id: id,
         mediaType: mediaType,
         title: title,
         posterPath: posterPath,
-        isFinished: true,
+        isFinished: mediaType == 'movie',
+        lastSeason: nextSeason ?? season,
+        lastEpisode: nextEpisode ?? episode,
         finishedEpisodes:
             mediaType == 'tv' && season != null && episode != null
                 ? {'${season}_$episode'}
@@ -185,10 +188,10 @@ class WatchHistoryNotifier extends Notifier<List<WatchedEntry>> {
     }
 
     final updated = entry.copyWith(
-      // Only movies are "finished" as a whole via this method
-      // For TV, isFinished usually means the entire show is done (not used here)
       isFinished: mediaType == 'movie',
       finishedEpisodes: finished,
+      lastSeason: nextSeason ?? entry.lastSeason,
+      lastEpisode: nextEpisode ?? entry.lastEpisode,
     );
 
     final newList = List<WatchedEntry>.from(state);
