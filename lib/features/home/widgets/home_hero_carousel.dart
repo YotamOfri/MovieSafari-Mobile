@@ -215,7 +215,7 @@ class _HeroItem extends StatelessWidget {
               offset: Offset(value * 150, 0),
               child: TmdbImage(
                 path: backdropPath,
-                highResSize: 'original',
+                highResSize: 'w1280',
                 height: 600,
                 width: double.infinity,
               ),

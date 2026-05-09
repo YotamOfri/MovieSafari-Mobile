@@ -42,7 +42,7 @@ class HomePage extends ConsumerWidget {
 
               return Positioned.fill(
                 child: ImageFiltered(
-                  imageFilter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                  imageFilter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
                   child: Opacity(
                     opacity: 0.4,
                     child: TmdbImage(
