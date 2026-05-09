@@ -31,6 +31,11 @@ class TmdbImage extends StatelessWidget {
       );
     }
 
+    // Optimized cache sizes based on common usage
+    final int? effectiveCacheWidth = (width != null && width!.isFinite) 
+        ? (width! * MediaQuery.of(context).devicePixelRatio).round() 
+        : 600;
+
     return SizedBox(
       width: width,
       height: height,
@@ -39,7 +44,7 @@ class TmdbImage extends StatelessWidget {
           ? Image.network(
               'https://image.tmdb.org/t/p/$highResSize$path',
               fit: fit,
-              cacheWidth: 400,
+              cacheWidth: effectiveCacheWidth,
               errorBuilder: (context, error, stackTrace) => Container(
                 color: const Color(0xFF1A1C23),
                 child: const Center(child: Icon(Icons.broken_image_rounded, color: Colors.white10, size: 24)),
@@ -52,12 +57,14 @@ class TmdbImage extends StatelessWidget {
             Image.network(
               'https://image.tmdb.org/t/p/$lowResSize$path',
               fit: fit,
+              cacheWidth: 100, // Small for blur
               errorBuilder: (context, error, stackTrace) => Container(color: const Color(0xFF1A1C23)),
             ),
             // High res image fading in
             Image.network(
               'https://image.tmdb.org/t/p/$highResSize$path',
               fit: fit,
+              cacheWidth: effectiveCacheWidth,
               errorBuilder: (context, error, stackTrace) => const SizedBox(),
               frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
                 if (wasSynchronouslyLoaded) {

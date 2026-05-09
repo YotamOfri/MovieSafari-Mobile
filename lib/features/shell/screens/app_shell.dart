@@ -109,7 +109,7 @@ class _NavBarItem extends StatelessWidget {
         ),
         child: HugeIcon(
           icon: icon,
-          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.4),
+          color: isSelected ? Colors.white : Colors.grey.shade400,
           size: 24,
         ),
       ),
