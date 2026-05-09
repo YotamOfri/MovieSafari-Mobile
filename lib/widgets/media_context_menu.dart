@@ -57,9 +57,9 @@ class MediaContextMenu {
 
             return Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1C23).withOpacity(0.85),
+                color: const Color(0xFF1A1C23).withValues(alpha: 0.85),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
               ),
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               child: Column(
@@ -71,7 +71,7 @@ class MediaContextMenu {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -120,7 +120,7 @@ class MediaContextMenu {
                                     Text(
                                       displayYear,
                                       style: TextStyle(
-                                          color: Colors.white.withOpacity(0.5),
+                                          color: Colors.white.withValues(alpha: 0.5),
                                           fontSize: 14),
                                     ),
                                     const SizedBox(width: 12),
@@ -144,7 +144,7 @@ class MediaContextMenu {
                                 alignment: Alignment.centerLeft,
                                 child: Text('Loading description...',
                                     style: TextStyle(
-                                        color: Colors.white.withOpacity(0.3),
+                                        color: Colors.white.withValues(alpha: 0.3),
                                         fontSize: 13,
                                         fontStyle: FontStyle.italic)),
                               )
@@ -152,7 +152,7 @@ class MediaContextMenu {
                               Text(
                                 displayOverview,
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
+                                  color: Colors.white.withValues(alpha: 0.6),
                                   fontSize: 13,
                                   height: 1.4,
                                 ),
