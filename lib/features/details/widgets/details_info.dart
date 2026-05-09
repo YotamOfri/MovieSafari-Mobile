@@ -20,112 +20,165 @@ class DetailsInfo extends StatelessWidget {
     final List<dynamic> genres = details['genres'] ?? [];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
+          
+          // 1. Title & Tagline
           Text(
             title,
             style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
               color: Colors.white,
-              letterSpacing: -0.5,
+              letterSpacing: -0.8,
+              height: 1.1,
             ),
           ),
           if (tagline != null && tagline.isNotEmpty) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
               tagline,
               style: TextStyle(
-                fontSize: 15,
-                color: Colors.white.withOpacity(0.5),
+                fontSize: 16,
+                color: Colors.white.withValues(alpha: 0.5),
                 fontStyle: FontStyle.italic,
+                letterSpacing: 0.2,
               ),
             ),
           ],
-          const SizedBox(height: 16),
+          
+          const SizedBox(height: 20),
+
+          // 2. Metadata Row (Rating, Year, Runtime)
           Row(
             children: [
+              // Rating Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                    const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
                     const SizedBox(width: 4),
                     Text(
                       rating.toStringAsFixed(1),
                       style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w900,
                         color: Colors.amber,
-                        fontSize: 13,
+                        fontSize: 14,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
+              
+              // Year
               if (date != null)
-                Text(
-                  date.split('-')[0],
-                  style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13),
+                _MetadataIcon(
+                  icon: Icons.calendar_today_rounded,
+                  label: date.split('-')[0],
                 ),
-              const SizedBox(width: 12),
+              
+              const SizedBox(width: 16),
+              
+              // Runtime
               if (type == 'movie' && details['runtime'] != null)
-                Text(
-                  '${details['runtime']} min',
-                  style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13),
+                _MetadataIcon(
+                  icon: Icons.timer_outlined,
+                  label: '${details['runtime']}m',
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          
+          const SizedBox(height: 24),
+
+          // 3. Genre Pills (Glassmorphic)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
             child: Row(
               children: genres.map((genre) {
                 return Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  margin: const EdgeInsets.only(right: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   child: Text(
                     genre['name'],
-                    style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7)),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.8),
+                      letterSpacing: 0.3,
+                    ),
                   ),
                 );
               }).toList(),
             ),
           ),
-          const SizedBox(height: 24),
+
+          const SizedBox(height: 32),
+
+          // 4. Storyline
           if (overview != null && overview.isNotEmpty) ...[
             const Text(
               'Storyline',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
                 color: Colors.white,
+                letterSpacing: 0.2,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               overview,
               style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withOpacity(0.6),
+                fontSize: 15,
+                color: Colors.white.withValues(alpha: 0.6),
                 height: 1.6,
+                letterSpacing: 0.1,
               ),
             ),
           ],
         ],
       ),
+    );
+  }
+}
+
+class _MetadataIcon extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _MetadataIcon({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white.withValues(alpha: 0.4), size: 16),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.6),
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

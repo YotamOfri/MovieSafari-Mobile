@@ -469,7 +469,8 @@ class _GenreChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected
               ? Colors.blueAccent
@@ -486,7 +487,7 @@ class _GenreChip extends StatelessWidget {
           style: TextStyle(
             color: isSelected ? Colors.white : Colors.white60,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 12,
+            fontSize: 13,
           ),
         ),
       ),
