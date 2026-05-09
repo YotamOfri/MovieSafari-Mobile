@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/bookmark_provider.dart';
@@ -10,6 +11,7 @@ import 'tmdb_image.dart';
 class MediaContextMenu {
   static void show(BuildContext context, WidgetRef ref,
       Map<String, dynamic> item, String type) {
+    HapticFeedback.mediumImpact();
     final int id = item['id'];
     final String title = item['title'] ?? item['name'] ?? 'Unknown';
     final String? posterPath = item['poster_path'];
@@ -172,12 +174,82 @@ class MediaContextMenu {
                     label: isBookmarked ? 'Remove Bookmark' : 'Add to Bookmarks',
                     color: Colors.blueAccent,
                     onTap: () {
+                      final title = displayTitle;
                       bookmarkNotifier.toggleBookmark(Bookmark(
                           id: id,
-                          title: displayTitle,
+                          title: title,
                           mediaType: type,
                           posterPath: displayPoster));
+                      
                       Navigator.pop(sheetContext);
+                      
+                      // Show Premium Toast
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: Colors.transparent,
+                          elevation: 0,
+                          margin: const EdgeInsets.only(bottom: 20, left: 24, right: 24),
+                          content: TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.0, end: 1.0),
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeOutBack,
+                            builder: (context, value, child) {
+                              return Transform.translate(
+                                offset: Offset(0, 30 * (1 - value)),
+                                child: Opacity(
+                                  opacity: value.clamp(0.0, 1.0),
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(24),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.2),
+                                        blurRadius: 30,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isBookmarked ? Icons.bookmark_remove : Icons.bookmark_add,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Text(
+                                          isBookmarked 
+                                              ? 'Removed $title' 
+                                              : 'Added $title to Bookmarks',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: -0.2,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
                     },
                   ),
                   _ContextAction(
@@ -245,7 +317,10 @@ class _ContextAction extends StatelessWidget {
       leading: Icon(icon, color: color, size: 22),
       title:
           Text(label, style: const TextStyle(color: Colors.white, fontSize: 14)),
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
     );
   }
 }

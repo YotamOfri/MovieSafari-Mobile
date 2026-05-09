@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../providers/bookmark_provider.dart';
 import '../../../widgets/tmdb_image.dart';
+import '../../../widgets/media_context_menu.dart';
+import '../../../widgets/pressable_card.dart';
 
 class BookmarksPage extends ConsumerWidget {
   const BookmarksPage({super.key});
@@ -49,7 +51,7 @@ class BookmarksPage extends ConsumerWidget {
                         itemCount: bookmarks.length,
                         itemBuilder: (context, index) {
                           final bookmark = bookmarks[index];
-                          return _buildBookmarkCard(context, bookmark);
+                          return _buildBookmarkCard(context, ref, bookmark);
                         },
                       ),
               ),
@@ -85,10 +87,18 @@ class BookmarksPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildBookmarkCard(BuildContext context, Bookmark bookmark) {
-    return GestureDetector(
+  Widget _buildBookmarkCard(BuildContext context, WidgetRef ref, Bookmark bookmark) {
+    return PressableCard(
       onTap: () {
         context.push('/details/${bookmark.mediaType}/${bookmark.id}');
+      },
+      onLongPress: () {
+        MediaContextMenu.show(
+          context,
+          ref,
+          bookmark.toJson(),
+          bookmark.mediaType,
+        );
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -111,7 +121,7 @@ class BookmarksPage extends ConsumerWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.7),
+                      Colors.black.withValues(alpha: 0.7),
                       Colors.black,
                     ],
                   ),
