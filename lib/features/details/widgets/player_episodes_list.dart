@@ -246,17 +246,14 @@ class _EpisodeCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: Colors.black.withValues(alpha: 0.5), // Faster than BackdropFilter
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
                     ),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                      child: const HugeIcon(
-                        icon: HugeIcons.strokeRoundedPlayCircle,
-                        color: Colors.white,
-                        size: 32,
-                      ),
+                    child: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedPlayCircle,
+                      color: Colors.white,
+                      size: 32,
                     ),
                   ),
                 ),
@@ -281,34 +278,28 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.4),
-            border: Border.all(color: color.withValues(alpha: 0.3)),
-            borderRadius: BorderRadius.circular(20),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.7), // Solid dark looks great and is fast
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 10),
+          const SizedBox(width: 4),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              color: color,
+              fontSize: 8,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
+            ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: color, size: 10),
-              const SizedBox(width: 4),
-              Text(
-                label.toUpperCase(),
-                style: TextStyle(
-                  color: color,
-                  fontSize: 8,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
