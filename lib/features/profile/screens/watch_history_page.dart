@@ -5,6 +5,7 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../providers/watch_history_provider.dart';
 import '../../../widgets/tmdb_image.dart';
 import '../../../widgets/pressable_card.dart';
+import '../../../widgets/media_context_menu.dart';
 
 class WatchHistoryPage extends ConsumerStatefulWidget {
   const WatchHistoryPage({super.key});
@@ -84,7 +85,7 @@ class _WatchHistoryPageState extends ConsumerState<WatchHistoryPage> {
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.68,
+                      childAspectRatio: 0.72,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 20,
                     ),
@@ -136,50 +137,95 @@ class _WatchHistoryPageState extends ConsumerState<WatchHistoryPage> {
           context.push('/player/${entry.mediaType}/${entry.id}');
         }
       },
-      onLongPress: () {},
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  TmdbImage(
-                    path: entry.posterPath,
-                    highResSize: 'w400',
+      onLongPress: () {
+        MediaContextMenu.show(context, ref, entry.toJson(), entry.mediaType);
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // 1. Background Image
+            TmdbImage(
+              path: entry.posterPath,
+              highResSize: 'w400',
+            ),
+            
+            // 2. Gradient Overlay
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.2),
+                      Colors.black.withValues(alpha: 0.8),
+                      Colors.black,
+                    ],
+                    stops: const [0.0, 0.4, 0.8, 1.0],
                   ),
-                  if (entry.isFinished)
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.greenAccent,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.check, color: Colors.black, size: 14),
+                ),
+              ),
+            ),
+            
+            // 3. Content
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      height: 1.1,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blueAccent.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3), width: 0.5),
+                    ),
+                    child: Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Colors.blueAccent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            entry.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(color: Colors.blueAccent, fontSize: 12, fontWeight: FontWeight.w600),
-          ),
-        ],
+            
+            // 4. Completed Indicator
+            if (entry.isFinished)
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.greenAccent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check, color: Colors.black, size: 14),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
