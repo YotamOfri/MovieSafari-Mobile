@@ -34,7 +34,7 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
         : ref.watch(tvRecommendationsProvider(widget.id));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1014),
+      backgroundColor: Colors.black,
       body: detailsAsync.when(
         data: (details) {
           final List<dynamic> seasons = details['seasons'] ?? [];
@@ -59,24 +59,24 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
                 ),
               
               // 2. Dark Overlay for Contrast
-              Positioned.fill(
-                child: Container(
+                // Cinematic Shadow Dissolve
+                Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        const Color(0xFF0F1014).withValues(alpha: 0.3),
-                        const Color(0xFF0F1014).withValues(alpha: 0.8),
-                        const Color(0xFF0F1014),
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.0),
+                        Colors.black.withValues(alpha: 0.2),
+                        Colors.black.withValues(alpha: 0.5),
+                        Colors.black.withValues(alpha: 0.8),
+                        Colors.black,
                       ],
-                      stops: const [0.0, 0.5, 1.0],
+                      stops: const [0.0, 0.4, 0.6, 0.8, 0.95, 1.0],
                     ),
                   ),
-                ),
-              ),
-
-              // 3. Main Content
+                ),// 3. Main Content
               CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
