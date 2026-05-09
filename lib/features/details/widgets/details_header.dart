@@ -38,16 +38,16 @@ class DetailsHeader extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
               child: Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.3),
+                  color: Colors.white.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.1),
-                    width: 0.5,
+                    width: 1.0,
                   ),
                 ),
                 child: IconButton(
@@ -199,6 +199,8 @@ class BookmarkButton extends ConsumerWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
           child: Container(
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.1),
               shape: BoxShape.circle,
@@ -208,12 +210,13 @@ class BookmarkButton extends ConsumerWidget {
               ),
             ),
             child: IconButton(
+              padding: EdgeInsets.zero,
               icon: HugeIcon(
                 icon: isBookmarked
                     ? HugeIcons.strokeRoundedBookmark02
                     : HugeIcons.strokeRoundedBookmark01,
                 color: isBookmarked ? Colors.blueAccent : Colors.white,
-                size: 20,
+                size: 18,
               ),
               onPressed: () {
                 final bookmark = Bookmark(
