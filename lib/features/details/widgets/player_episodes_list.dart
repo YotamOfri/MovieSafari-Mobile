@@ -1,9 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../providers/api_provider.dart';
 import '../../../providers/watch_history_provider.dart';
+import '../../../widgets/tmdb_image.dart';
 
 class PlayerEpisodesList extends ConsumerWidget {
   final int id;
@@ -27,192 +29,261 @@ class PlayerEpisodesList extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text('Episodes',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
+          padding: EdgeInsets.symmetric(horizontal: 20.0),
+          child: Text(
+            'Episodes',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: 0.2,
+            ),
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         SizedBox(
-          height: 160,
+          height: 180,
           child: ref.watch(tvSeasonDetailsProvider((id, season))).when(
             data: (seasonData) {
-              final episodes =
-                  seasonData['episodes'] as List<dynamic>? ?? [];
+              final episodes = seasonData['episodes'] as List<dynamic>? ?? [];
               if (episodes.isEmpty) {
                 return const Center(
-                    child: Text('No episodes',
-                        style: TextStyle(color: Colors.white54)));
+                  child: Text(
+                    'No episodes available',
+                    style: TextStyle(color: Colors.white54, fontWeight: FontWeight.w600),
+                  ),
+                );
               }
 
               return ListView.separated(
                 controller: scrollController,
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                cacheExtent: 1000,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                physics: const BouncingScrollPhysics(),
                 itemCount: episodes.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(width: 12),
+                separatorBuilder: (context, index) => const SizedBox(width: 16),
                 itemBuilder: (context, index) {
                   final episode = episodes[index];
                   final int epNumber = episode['episode_number'];
-                  final String epName =
-                      episode['name'] ?? 'Episode $epNumber';
+                  final String epName = episode['name'] ?? 'Episode $epNumber';
                   final String? epStill = episode['still_path'];
                   final bool isSelected = currentEpisode == epNumber;
-                  final bool isWatched =
-                      historyNotifier.isEpisodeFinished(id, season, epNumber);
+                  final bool isWatched = historyNotifier.isEpisodeFinished(id, season, epNumber);
 
-                  return GestureDetector(
+                  return _EpisodeCard(
+                    epNumber: epNumber,
+                    epName: epName,
+                    epStill: epStill,
+                    isSelected: isSelected,
+                    isWatched: isWatched,
                     onTap: () {
                       if (!isSelected) {
-                        context.pushReplacement(
-                            '/player/tv/$id?season=$season&episode=$epNumber');
+                        context.pushReplacement('/player/tv/$id?season=$season&episode=$epNumber');
                       }
                     },
-                    child: Container(
-                      width: 220,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected
-                              ? Colors.blueAccent
-                              : isWatched
-                                  ? Colors.greenAccent.withOpacity(0.4)
-                                  : Colors.transparent,
-                          width: 2,
-                        ),
-                        color: const Color(0xFF1A1C23),
-                        image: epStill != null
-                            ? DecorationImage(
-                                image: ResizeImage(
-                                  NetworkImage(
-                                      'https://image.tmdb.org/t/p/w300$epStill'),
-                                  width: 400,
-                                ),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: isSelected
-                              ? Colors.blueAccent.withOpacity(0.2)
-                              : isWatched
-                                  ? Colors.black.withOpacity(0.4)
-                                  : null,
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withOpacity(0.9),
-                            ],
-                            stops: const [0.4, 1.0],
-                          ),
-                        ),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            if (epStill == null)
-                              const Center(
-                                  child:
-                                      Icon(Icons.tv, color: Colors.white54)),
-
-                            // Watched dimming overlay
-                            if (isWatched && !isSelected)
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Colors.black.withOpacity(0.35),
-                                ),
-                              ),
-
-                            Positioned(
-                              bottom: 12,
-                              left: 12,
-                              right: 12,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (isSelected)
-                                    const Text(
-                                      'Now Playing',
-                                      style: TextStyle(
-                                          color: Colors.blueAccent,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold),
-                                    )
-                                  else if (isWatched)
-                                    Row(
-                                      children: const [
-                                        Icon(Icons.check_circle,
-                                            color: Colors.greenAccent,
-                                            size: 12),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Watched',
-                                          style: TextStyle(
-                                              color: Colors.greenAccent,
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ],
-                                    ),
-                                  Text(
-                                    '$epNumber. $epName',
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? Colors.blueAccent
-                                          : isWatched
-                                              ? Colors.white60
-                                              : Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Center icon
-                            if (isSelected)
-                              const Center(
-                                child: HugeIcon(
-                                  icon: HugeIcons.strokeRoundedPlayCircle,
-                                  color: Colors.blueAccent,
-                                  size: 40,
-                                ),
-                              )
-                            else if (isWatched)
-                              Center(
-                                child: Icon(
-                                  Icons.check_circle_outline,
-                                  color: Colors.greenAccent.withOpacity(0.6),
-                                  size: 36,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
                   );
                 },
               );
             },
-            loading: () =>
-                const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator(color: Colors.blueAccent)),
             error: (_, __) => const Center(
-                child: Text('Error loading episodes',
-                    style: TextStyle(color: Colors.white54))),
+              child: Text('Error loading episodes', style: TextStyle(color: Colors.white54)),
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _EpisodeCard extends StatelessWidget {
+  final int epNumber;
+  final String epName;
+  final String? epStill;
+  final bool isSelected;
+  final bool isWatched;
+  final VoidCallback onTap;
+
+  const _EpisodeCard({
+    required this.epNumber,
+    required this.epName,
+    required this.epStill,
+    required this.isSelected,
+    required this.isWatched,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        width: 240,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? Colors.white.withValues(alpha: 0.3)
+                : Colors.white.withValues(alpha: 0.1),
+            width: isSelected ? 1.5 : 1,
+          ),
+          boxShadow: [
+            if (isSelected)
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Background Image
+              if (epStill != null)
+                TmdbImage(
+                  path: epStill,
+                  highResSize: 'w300',
+                  fit: BoxFit.cover,
+                )
+              else
+                Container(color: Colors.white.withValues(alpha: 0.05)),
+
+              // Dynamic Overlay
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.4),
+                      Colors.black.withValues(alpha: 0.95),
+                    ],
+                    stops: const [0.3, 0.6, 1.0],
+                  ),
+                ),
+              ),
+
+              // "Now Playing" or "Watched" Indicator
+              if (isSelected || isWatched)
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: _StatusPill(
+                    icon: isSelected ? Icons.play_arrow_rounded : Icons.check_circle_rounded,
+                    label: isSelected ? 'Now Playing' : 'Watched',
+                    color: isSelected ? Colors.white : Colors.greenAccent,
+                  ),
+                ),
+
+              // Episode Info
+              Positioned(
+                bottom: 12,
+                left: 12,
+                right: 12,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Episode $epNumber',
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.6),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      epName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Play Icon for selection
+              if (isSelected)
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                    ),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                      child: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedPlayCircle,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _StatusPill({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.4),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 10),
+              const SizedBox(width: 4),
+              Text(
+                label.toUpperCase(),
+                style: TextStyle(
+                  color: color,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
