@@ -47,11 +47,12 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _prevSeason = widget.season;
     _prevEpisode = widget.episode;
-    
+
     // Updated for new card width (240) + spacing (16)
     final double initialOffset = (widget.episode - 1) * 256.0;
-    _episodesScrollController =
-        ScrollController(initialScrollOffset: initialOffset);
+    _episodesScrollController = ScrollController(
+      initialScrollOffset: initialOffset,
+    );
   }
 
   @override
@@ -87,7 +88,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     final title = details['title'] ?? details['name'] ?? 'Unknown';
     final posterPath = details['poster_path'] as String?;
 
-    ref.read(watchHistoryProvider.notifier).markStarted(
+    ref
+        .read(watchHistoryProvider.notifier)
+        .markStarted(
           id: widget.id,
           mediaType: widget.type,
           title: title,
@@ -118,7 +121,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     _finishTimer = Timer(threshold, () {
       if (mounted && !_autoFinished) {
         _autoFinished = true;
-        ref.read(watchHistoryProvider.notifier).markFinished(
+        ref
+            .read(watchHistoryProvider.notifier)
+            .markFinished(
               id: widget.id,
               mediaType: widget.type,
               season: widget.season,
@@ -131,7 +136,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
   void _manualMarkFinished() {
     _finishTimer?.cancel();
     _autoFinished = true;
-    ref.read(watchHistoryProvider.notifier).markFinished(
+    ref
+        .read(watchHistoryProvider.notifier)
+        .markFinished(
           id: widget.id,
           mediaType: widget.type,
           season: widget.season,
@@ -143,8 +150,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
   @override
   Widget build(BuildContext context) {
     final servers = widget.type == 'tv'
-        ? ServerConstants.getTvServers(
-            widget.id, widget.season, widget.episode)
+        ? ServerConstants.getTvServers(widget.id, widget.season, widget.episode)
         : ServerConstants.getMovieServers(widget.id);
     final currentServerUrl = servers[_selectedServerIndex];
 
@@ -159,7 +165,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     final isCurrentFinished = widget.type == 'movie'
         ? (historyEntry?.isFinished ?? false)
         : (historyEntry?.isEpisodeFinished(widget.season, widget.episode) ??
-            false);
+              false);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -184,7 +190,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                     ),
                   ),
                 ),
-              
+
               // 2. Cinematic Shadow Dissolve (Matched to Details Page)
               Positioned.fill(
                 child: Container(
@@ -222,7 +228,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                     // Video Player
                     VideoPlayerView(
                       serverUrl: currentServerUrl,
-                      thumbnailPath: details['backdrop_path'] as String? ??
+                      thumbnailPath:
+                          details['backdrop_path'] as String? ??
                           details['poster_path'] as String?,
                       onPlayPressed: () => _onPlayPressed(details),
                       allServers: servers,
@@ -240,7 +247,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 20),
-                            
+
                             // NEW: Action Controls Row
                             _PlayerControlsRow(
                               isFinished: isCurrentFinished,
@@ -293,7 +300,10 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
           child: CircularProgressIndicator(color: Colors.blueAccent),
         ),
         error: (e, s) => Center(
-          child: Text('Error loading player', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+          child: Text(
+            'Error loading player',
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+          ),
         ),
       ),
     );
@@ -303,9 +313,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
 class _PlayerTopBar extends StatelessWidget {
   final String title;
 
-  const _PlayerTopBar({
-    required this.title,
-  });
+  const _PlayerTopBar({required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -364,17 +372,19 @@ class _PlayerControlsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasNext = type == 'tv' && _hasNextEpisode(details, season, episode);
+    final shouldShowNext = type == 'tv' && _shouldShowNextButton(details, season, episode);
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (hasNext) ...[
+          if (shouldShowNext) ...[
             Expanded(
               child: _GlassActionChip(
-                icon: isFinished ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
+                icon: isFinished
+                    ? Icons.check_circle_rounded
+                    : Icons.check_circle_outline_rounded,
                 label: isFinished ? 'Watched' : 'Mark Watched',
                 color: isFinished ? Colors.greenAccent : Colors.white,
                 onTap: isFinished ? null : onMarkFinished,
@@ -393,7 +403,9 @@ class _PlayerControlsRow extends StatelessWidget {
             SizedBox(
               width: MediaQuery.of(context).size.width * 0.5,
               child: _GlassActionChip(
-                icon: isFinished ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
+                icon: isFinished
+                    ? Icons.check_circle_rounded
+                    : Icons.check_circle_outline_rounded,
                 label: isFinished ? 'Watched' : 'Mark Watched',
                 color: isFinished ? Colors.greenAccent : Colors.white,
                 onTap: isFinished ? null : onMarkFinished,
@@ -405,14 +417,26 @@ class _PlayerControlsRow extends StatelessWidget {
     );
   }
 
-  bool _hasNextEpisode(Map<String, dynamic> details, int season, int episode) {
+  bool _shouldShowNextButton(Map<String, dynamic> details, int season, int episode) {
     final seasons = details['seasons'] as List<dynamic>? ?? [];
     final currentSeasonData = seasons.firstWhere(
       (s) => s['season_number'] == season,
       orElse: () => null,
     );
     final totalEpisodes = currentSeasonData?['episode_count'] as int? ?? 0;
-    return episode < totalEpisodes;
+    
+    // More episodes in current season
+    if (episode < totalEpisodes) return true;
+    
+    // OR there is a next season in the list
+    final currentIndex = seasons.indexWhere((s) => s['season_number'] == season);
+    if (currentIndex != -1 && currentIndex < seasons.length - 1) {
+      for (int i = currentIndex + 1; i < seasons.length; i++) {
+        if ((seasons[i]['episode_count'] ?? 0) > 0) return true;
+      }
+    }
+    
+    return false;
   }
 }
 
@@ -524,18 +548,42 @@ class _NextEpisodeButton extends StatelessWidget {
       orElse: () => null,
     );
     final totalEpisodes = currentSeasonData?['episode_count'] as int? ?? 0;
-    final hasNext = currentEpisode < totalEpisodes;
+    final bool hasNextInSeason = currentEpisode < totalEpisodes;
 
-    if (!hasNext) return const SizedBox();
-
-    final button = _GlassButton(
-      icon: Icons.skip_next_rounded,
-      onTap: () {
-        context.pushReplacement(
-          '/player/tv/$id?season=$currentSeason&episode=${currentEpisode + 1}',
-        );
-      },
+    // Find the current season's position in the list
+    final int currentIndex = seasons.indexWhere(
+      (s) => s['season_number'] == currentSeason,
     );
+
+    // Look for the next season in the list that has episodes
+    Map<String, dynamic>? nextSeasonData;
+    if (currentIndex != -1) {
+      for (int i = currentIndex + 1; i < seasons.length; i++) {
+        final s = seasons[i];
+        if ((s['episode_count'] ?? 0) > 0) {
+          nextSeasonData = s;
+          break;
+        }
+      }
+    }
+
+    final bool hasNextSeason = nextSeasonData != null;
+    print(nextSeasonData);
+    print(hasNextSeason);
+    if (!hasNextInSeason && !hasNextSeason) return const SizedBox();
+
+    final bool isNextSeason = !hasNextInSeason && hasNextSeason;
+    final String label = isNextSeason ? 'Next Season' : 'Next Episode';
+    final int targetSeason = isNextSeason
+        ? (nextSeasonData?['season_number'] ?? currentSeason + 1)
+        : currentSeason;
+    final int targetEpisode = isNextSeason ? 1 : currentEpisode + 1;
+
+    void navigateToNext() {
+      context.pushReplacement(
+        '/player/tv/$id?season=$targetSeason&episode=$targetEpisode',
+      );
+    }
 
     if (isExpanded) {
       return Expanded(
@@ -546,25 +594,29 @@ class _NextEpisodeButton extends StatelessWidget {
             child: Material(
               color: Colors.white.withValues(alpha: 0.08),
               child: InkWell(
-                onTap: () {
-                  context.pushReplacement(
-                    '/player/tv/$id?season=$currentSeason&episode=${currentEpisode + 1}',
-                  );
-                },
+                onTap: navigateToNext,
                 child: Container(
                   height: 44,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.skip_next_rounded, color: Colors.white, size: 18),
-                      SizedBox(width: 8),
+                      Icon(
+                        isNextSeason
+                            ? Icons.keyboard_double_arrow_right_rounded
+                            : Icons.skip_next_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
                       Text(
-                        'Next Episode',
-                        style: TextStyle(
+                        label,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -580,6 +632,11 @@ class _NextEpisodeButton extends StatelessWidget {
       );
     }
 
-    return button;
+    return _GlassButton(
+      icon: isNextSeason
+          ? Icons.keyboard_double_arrow_right_rounded
+          : Icons.skip_next_rounded,
+      onTap: navigateToNext,
+    );
   }
 }
