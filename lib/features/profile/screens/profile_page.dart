@@ -41,10 +41,11 @@ class ProfilePage extends ConsumerWidget {
                     'assets/PosterBanner.png',
                     fit: BoxFit.cover,
                   ),
-                  // Deep Glass Blur Overlay
+                  
+                  // Deep Glass Blur Overlay (Kept for premium feel)
                   Positioned.fill(
                     child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -79,19 +80,13 @@ class ProfilePage extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(50),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                            child: CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.white.withValues(alpha: 0.1),
-                              child: const HugeIcon(
-                                icon: HugeIcons.strokeRoundedUserCircle,
-                                color: Colors.white,
-                                size: 40,
-                              ),
-                            ),
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.white.withValues(alpha: 0.1),
+                          child: const HugeIcon(
+                            icon: HugeIcons.strokeRoundedUserCircle,
+                            color: Colors.white,
+                            size: 40,
                           ),
                         ),
                       ),
@@ -106,26 +101,21 @@ class ProfilePage extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.blueAccent.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.2), width: 1),
-                            ),
-                            child: const Text(
-                              'PREMIUM MEMBER',
-                              style: TextStyle(
-                                color: Colors.blueAccent,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
+                      // Premium Badge (Streamlined)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.blueAccent.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.2), width: 1),
+                        ),
+                        child: const Text(
+                          'PREMIUM MEMBER',
+                          style: TextStyle(
+                            color: Colors.blueAccent,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
                           ),
                         ),
                       ),
@@ -144,7 +134,7 @@ class ProfilePage extends ConsumerWidget {
                 children: [
                   const SizedBox(height: 24),
                   
-                  // Glassmorphic Statistics
+                  // Optimized Statistics
                   Row(
                     children: [
                       _CompactStatTile(
@@ -225,34 +215,28 @@ class ProfilePage extends ConsumerWidget {
 
   Widget _buildHistoryList(List<dynamic> history, BuildContext context, WidgetRef ref) {
     if (history.isEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            height: 140,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      return Container(
+        height: 140,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedPlay,
+              color: Colors.white.withValues(alpha: 0.1),
+              size: 32,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                HugeIcon(
-                  icon: HugeIcons.strokeRoundedPlay,
-                  color: Colors.white.withValues(alpha: 0.1),
-                  size: 32,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'No history yet',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-              ],
+            const SizedBox(height: 12),
+            Text(
+              'No history yet',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 14, fontWeight: FontWeight.w600),
             ),
-          ),
+          ],
         ),
       );
     }
@@ -289,10 +273,8 @@ class ProfilePage extends ConsumerWidget {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // 1. Background Image
                       TmdbImage(path: entry.posterPath, highResSize: 'w400'),
                       
-                      // 2. Modern Multi-stage Gradient
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
@@ -311,7 +293,6 @@ class ProfilePage extends ConsumerWidget {
                         ),
                       ),
                       
-                      // 3. Content
                       Padding(
                         padding: const EdgeInsets.all(12),
                         child: Column(
@@ -330,26 +311,21 @@ class ProfilePage extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blueAccent.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3), width: 0.8),
-                                  ),
-                                  child: Text(
-                                    subtitle,
-                                    style: const TextStyle(
-                                      color: Colors.blueAccent,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
+                            // Metadata Pill (Streamlined)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: Colors.blueAccent.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3), width: 0.8),
+                              ),
+                              child: Text(
+                                subtitle,
+                                style: const TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.5,
                                 ),
                               ),
                             ),
@@ -357,25 +333,18 @@ class ProfilePage extends ConsumerWidget {
                         ),
                       ),
                       
-                      // 4. Watched Pill (Glassmorphic)
                       if (entry.isFinished)
                         Positioned(
                           top: 10,
                           right: 10,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                              child: Container(
-                                padding: const EdgeInsets.all(5),
-                                decoration: BoxDecoration(
-                                  color: Colors.greenAccent.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.4), width: 1),
-                                ),
-                                child: const Icon(Icons.check_rounded, color: Colors.greenAccent, size: 10),
-                              ),
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: Colors.greenAccent.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.4), width: 1),
                             ),
+                            child: const Icon(Icons.check_rounded, color: Colors.greenAccent, size: 10),
                           ),
                         ),
                     ],
@@ -406,49 +375,43 @@ class _CompactStatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color.withValues(alpha: 0.1), width: 1.5),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.1), width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: HugeIcon(icon: icon, color: color, size: 20),
             ),
-            child: Row(
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: HugeIcon(icon: icon, color: color, size: 20),
+                Text(
+                  value,
+                  style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
                 ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      value,
-                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
-                    ),
-                    Text(
-                      label.toUpperCase(),
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
+                Text(
+                  label.toUpperCase(),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.4),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -515,64 +478,58 @@ class _ActionTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: PressableCard(
         onTap: onTap,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.03),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: (isDestructive ? Colors.redAccent : Colors.white).withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: (isDestructive ? Colors.redAccent : Colors.white).withValues(alpha: 0.1),
+                    width: 1,
+                  ),
+                ),
+                child: HugeIcon(
+                  icon: icon,
+                  color: isDestructive ? Colors.redAccent : Colors.white,
+                  size: 22,
+                ),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: (isDestructive ? Colors.redAccent : Colors.white).withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: (isDestructive ? Colors.redAccent : Colors.white).withValues(alpha: 0.1),
-                        width: 1,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: isDestructive ? Colors.redAccent : Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                    child: HugeIcon(
-                      icon: icon,
-                      color: isDestructive ? Colors.redAccent : Colors.white,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                            color: isDestructive ? Colors.redAccent : Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                          ),
+                    if (subtitle != null)
+                      Text(
+                        subtitle!,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
-                        if (subtitle != null)
-                          Text(
-                            subtitle!,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.4),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.chevron_right_rounded, color: Colors.white.withValues(alpha: 0.2), size: 22),
-                ],
+                      ),
+                  ],
+                ),
               ),
-            ),
+              Icon(Icons.chevron_right_rounded, color: Colors.white.withValues(alpha: 0.2), size: 22),
+            ],
           ),
         ),
       ),
