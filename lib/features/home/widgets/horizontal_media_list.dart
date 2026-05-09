@@ -41,7 +41,7 @@ class HorizontalMediaList extends ConsumerWidget {
                 child: PressableCard(
                   onTap: () => context.push('/details/$type/$id'),
                   onLongPress: () {
-                    HapticFeedback.heavyImpact();
+                    HapticFeedback.vibrate();
                     MediaContextMenu.show(context, ref, item, type);
                   },
                   child: ClipRRect(

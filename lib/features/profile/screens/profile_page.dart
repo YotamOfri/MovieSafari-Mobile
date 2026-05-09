@@ -23,6 +23,7 @@ class ProfilePage extends ConsumerWidget {
       backgroundColor: const Color(0xFF0F1014),
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,15 +84,16 @@ class ProfilePage extends ConsumerWidget {
               _SectionHeader(
                 title: 'Watch History',
                 onClear: history.isEmpty ? null : () {
-                  // Clear all history
+                  HapticFeedback.mediumImpact();
                   showDialog(
                     context: context,
                     builder: (dialogContext) => AlertDialog(
                       backgroundColor: const Color(0xFF1A1C23),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       title: const Text('Clear History',
-                          style: TextStyle(color: Colors.white)),
-                      content: const Text('Remove all watch history?',
-                          style: TextStyle(color: Colors.grey)),
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      content: const Text('Are you sure you want to remove all items from your watch history?',
+                          style: TextStyle(color: Colors.white70, fontSize: 14)),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(dialogContext),
@@ -100,11 +102,12 @@ class ProfilePage extends ConsumerWidget {
                         ),
                         TextButton(
                           onPressed: () {
+                            HapticFeedback.mediumImpact();
                             ref.read(watchHistoryProvider.notifier).clearAll();
                             Navigator.pop(dialogContext);
                           },
-                          child: const Text('Clear',
-                              style: TextStyle(color: Colors.redAccent)),
+                          child: const Text('Clear All',
+                              style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -113,10 +116,11 @@ class ProfilePage extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               if (history.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 16),
-                  child: Text('Nothing watched yet',
-                      style: TextStyle(color: Colors.grey)),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  alignment: Alignment.center,
+                  child: Text('Your watch history is empty',
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 14)),
                 )
               else
                 SizedBox(
@@ -124,6 +128,7 @@ class ProfilePage extends ConsumerWidget {
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     padding: EdgeInsets.zero,
+                    physics: const BouncingScrollPhysics(),
                     itemCount: history.length,
                     itemBuilder: (context, index) {
                       final entry = history[index];
@@ -134,6 +139,7 @@ class ProfilePage extends ConsumerWidget {
 
                       return PressableCard(
                         onTap: () {
+                          HapticFeedback.mediumImpact();
                           if (entry.mediaType == 'tv') {
                             context.push(
                                 '/player/${entry.mediaType}/${entry.id}?season=${entry.lastSeason}&episode=${entry.lastEpisode}');
@@ -143,7 +149,7 @@ class ProfilePage extends ConsumerWidget {
                           }
                         },
                         onLongPress: () {
-                          HapticFeedback.heavyImpact();
+                          HapticFeedback.vibrate();
                           MediaContextMenu.show(
                             context,
                             ref,
@@ -159,7 +165,7 @@ class ProfilePage extends ConsumerWidget {
                             children: [
                               Expanded(
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(12),
                                   child: Stack(
                                     fit: StackFit.expand,
                                     children: [
@@ -168,7 +174,7 @@ class ProfilePage extends ConsumerWidget {
                                           highResSize: 'w200'),
                                       if (entry.isFinished)
                                         Container(
-                                          color: Colors.black.withOpacity(0.3),
+                                          color: Colors.black.withValues(alpha: 0.35),
                                           alignment: Alignment.topRight,
                                           padding: const EdgeInsets.all(6),
                                           child: const Icon(Icons.check_circle,
@@ -179,17 +185,17 @@ class ProfilePage extends ConsumerWidget {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 8),
                               Text(entry.title,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 11,
-                                      fontWeight: FontWeight.w600)),
+                                      fontWeight: FontWeight.bold)),
                               Text(subtitle,
                                   style: const TextStyle(
-                                      color: Colors.blueAccent, fontSize: 10)),
+                                      color: Colors.blueAccent, fontSize: 10, fontWeight: FontWeight.w600)),
                             ],
                           ),
                         ),
@@ -208,11 +214,14 @@ class ProfilePage extends ConsumerWidget {
                 label: 'Clear Search History',
                 subtitle: '${searchHistory.length} saved queries',
                 onTap: () {
+                  HapticFeedback.mediumImpact();
                   ref.read(searchHistoryProvider.notifier).clearAll();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Search history cleared'),
+                    SnackBar(
+                      content: const Text('Search history cleared', style: TextStyle(fontWeight: FontWeight.bold)),
                       behavior: SnackBarBehavior.floating,
+                      backgroundColor: const Color(0xFF1A1C23),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   );
                 },
@@ -222,14 +231,16 @@ class ProfilePage extends ConsumerWidget {
                 label: 'Clear Bookmarks',
                 subtitle: '${bookmarks.length} items saved',
                 onTap: () {
+                  HapticFeedback.mediumImpact();
                   showDialog(
                     context: context,
                     builder: (dialogContext) => AlertDialog(
                       backgroundColor: const Color(0xFF1A1C23),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       title: const Text('Clear Bookmarks',
-                          style: TextStyle(color: Colors.white)),
-                      content: const Text('Remove all bookmarks?',
-                          style: TextStyle(color: Colors.grey)),
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      content: const Text('Are you sure you want to remove all saved bookmarks?',
+                          style: TextStyle(color: Colors.white70, fontSize: 14)),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(dialogContext),
@@ -238,18 +249,20 @@ class ProfilePage extends ConsumerWidget {
                         ),
                         TextButton(
                           onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            ref.read(bookmarkProvider.notifier).clearAll();
                             Navigator.pop(dialogContext);
-                            // Note: bulk clear is not implemented in bookmark provider
-                            // For now, show a message
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      'Remove bookmarks individually from the Bookmarks page'),
-                                  behavior: SnackBarBehavior.floating),
+                              SnackBar(
+                                content: const Text('All bookmarks removed', style: TextStyle(fontWeight: FontWeight.bold)),
+                                behavior: SnackBarBehavior.floating,
+                                backgroundColor: const Color(0xFF1A1C23),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
                             );
                           },
-                          child: const Text('OK',
-                              style: TextStyle(color: Colors.redAccent)),
+                          child: const Text('Clear All',
+                              style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -284,9 +297,9 @@ class _StatCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(
           children: [
@@ -356,7 +369,7 @@ class _SettingsTile extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.07),
+          color: Colors.white.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: Colors.white70, size: 20),

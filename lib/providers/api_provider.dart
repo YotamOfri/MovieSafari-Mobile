@@ -17,6 +17,13 @@ final trendingSeriesProvider = FutureProvider<List<dynamic>>((ref) async {
   return response.data['results'] as List<dynamic>;
 });
 
+// Trending All (for Search page empty state)
+final trendingAllProvider = FutureProvider<List<dynamic>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  final response = await api.dio.get('/trending/all/day?language=en-US');
+  return response.data['results'] as List<dynamic>;
+});
+
 // Top Rated Movies
 final topRatedMoviesProvider = FutureProvider<List<dynamic>>((ref) async {
   final api = ref.watch(apiServiceProvider);
@@ -65,6 +72,16 @@ final tvDetailsProvider =
   final api = ref.watch(apiServiceProvider);
   final response = await api.dio.get('/tv/$id?language=en-US');
   return response.data as Map<String, dynamic>;
+});
+
+// Media Credits (Cast & Crew)
+final mediaCreditsProvider =
+    FutureProvider.family<List<dynamic>, (int, String)>((ref, params) async {
+  final api = ref.watch(apiServiceProvider);
+  final id = params.$1;
+  final type = params.$2;
+  final response = await api.dio.get('/$type/$id/credits?language=en-US');
+  return response.data['cast'] as List<dynamic>;
 });
 
 // TV Season Details

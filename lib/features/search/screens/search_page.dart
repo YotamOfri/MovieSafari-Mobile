@@ -10,6 +10,8 @@ import '../../../providers/watch_history_provider.dart';
 import '../../../widgets/tmdb_image.dart';
 import '../../../widgets/media_context_menu.dart';
 import '../../../widgets/pressable_card.dart';
+import '../../../widgets/skeleton_loader.dart';
+import '../../home/widgets/horizontal_media_list.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -38,6 +40,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 
   void _applyHistoryQuery(String query) {
+    HapticFeedback.mediumImpact();
     _controller.text = query;
     _controller.selection = TextSelection.fromPosition(
       TextPosition(offset: query.length),
@@ -46,6 +49,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 
   void _clearSearch() {
+    HapticFeedback.mediumImpact();
     _controller.clear();
     ref.read(searchQueryProvider.notifier).updateQuery('');
   }
@@ -55,17 +59,18 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final searchResultsAsync = ref.watch(searchResultsProvider);
     final searchQuery = ref.watch(searchQueryProvider);
     final searchHistory = ref.watch(searchHistoryProvider);
+    final trendingAllAsync = ref.watch(trendingAllProvider);
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Search Bar
-            Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.white.withOpacity(0.1)),
               ),
@@ -73,9 +78,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 controller: _controller,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Search movies, tv shows...',
+                  hintText: 'Movies, TV shows or genres...',
                   hintStyle:
-                      TextStyle(color: Colors.white.withOpacity(0.5)),
+                      TextStyle(color: Colors.white.withOpacity(0.4)),
                   prefixIcon: const UnconstrainedBox(
                     child: HugeIcon(
                       icon: HugeIcons.strokeRoundedSearch01,
@@ -85,10 +90,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   ),
                   suffixIcon: searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const UnconstrainedBox(
-                            child: Icon(Icons.clear,
-                                color: Colors.grey, size: 20),
-                          ),
+                          icon: const Icon(Icons.clear,
+                              color: Colors.white60, size: 20),
                           onPressed: _clearSearch,
                         )
                       : null,
@@ -99,126 +102,182 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 onChanged: (value) {
                   if (_debounce?.isActive ?? false) _debounce!.cancel();
                   _debounce =
-                      Timer(const Duration(milliseconds: 500), () {
+                      Timer(const Duration(milliseconds: 600), () {
                     _submitSearch(value);
                   });
                 },
                 onSubmitted: _submitSearch,
               ),
             ),
+          ),
 
-            const SizedBox(height: 20),
-
-            // Results / Empty State
-            Expanded(
-              child: searchQuery.trim().isEmpty
-                  ? _buildEmptyState(searchHistory)
-                  : searchResultsAsync.when(
-                      data: (results) {
-                        if (results.isEmpty) {
-                          return Center(
-                            child: Text(
-                              'No results found for "$searchQuery"',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.5),
+          // Results / Empty State
+          Expanded(
+            child: searchQuery.trim().isEmpty
+                ? _buildEmptyState(searchHistory, trendingAllAsync)
+                : searchResultsAsync.when(
+                    data: (results) {
+                      if (results.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const HugeIcon(
+                                icon: HugeIcons.strokeRoundedSearch01,
+                                size: 48,
+                                color: Colors.grey,
                               ),
-                            ),
-                          );
-                        }
-                        return _buildResultsGrid(results);
-                      },
-                      loading: () => const Center(
-                        child: CircularProgressIndicator(
-                            color: Colors.blueAccent),
-                      ),
-                      error: (e, s) =>
-                          Center(child: Text('Error: $e')),
-                    ),
-            ),
-          ],
-        ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No results for "$searchQuery"',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return _buildResultsGrid(results);
+                    },
+                    loading: () => const SkeletonGrid(),
+                    error: (e, s) =>
+                        Center(child: Text('Error: $e', style: const TextStyle(color: Colors.redAccent))),
+                  ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildEmptyState(List<String> history) {
-    if (history.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const HugeIcon(
-              icon: HugeIcons.strokeRoundedSearch01,
-              size: 64,
-              color: Colors.grey,
-            ),
-            const SizedBox(height: 16),
-            const Text('Find your favorite titles',
-                style: TextStyle(fontSize: 18, color: Colors.grey)),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Recent Searches',
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white)),
-            TextButton(
-              onPressed: () =>
-                  ref.read(searchHistoryProvider.notifier).clearAll(),
-              child: const Text('Clear all',
-                  style: TextStyle(color: Colors.grey, fontSize: 13)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: history.map((query) {
-            return GestureDetector(
-              onTap: () => _applyHistoryQuery(query),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.07),
-                  borderRadius: BorderRadius.circular(20),
-                  border:
-                      Border.all(color: Colors.white.withOpacity(0.08)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.history,
-                        color: Colors.grey, size: 15),
-                    const SizedBox(width: 8),
-                    Text(query,
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 14)),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => ref
-                          .read(searchHistoryProvider.notifier)
-                          .removeQuery(query),
-                      child: const Icon(Icons.close,
-                          color: Colors.grey, size: 14),
-                    ),
-                  ],
-                ),
+  Widget _buildEmptyState(List<String> history, AsyncValue<List<dynamic>> trendingAll) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (history.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Recent Searches',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
+                  TextButton(
+                    onPressed: () =>
+                        ref.read(searchHistoryProvider.notifier).clearAll(),
+                    child: const Text('Clear all',
+                        style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  ),
+                ],
               ),
-            );
-          }).toList(),
-        ),
-      ],
+            ),
+            const SizedBox(height: 4),
+            SizedBox(
+              height: 40,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: history.length,
+                itemBuilder: (context, index) {
+                  final query = history[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () => _applyHistoryQuery(query),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.07),
+                          borderRadius: BorderRadius.circular(20),
+                          border:
+                              Border.all(color: Colors.white.withOpacity(0.08)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.history,
+                                color: Colors.grey, size: 14),
+                            const SizedBox(width: 8),
+                            Text(query,
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
+
+          // Trending Now Section
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedFire,
+                  color: Colors.deepOrangeAccent,
+                  size: 18,
+                ),
+                SizedBox(width: 8),
+                Text('Trending Now',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          trendingAll.when(
+            data: (items) => SizedBox(
+              height: 195,
+              child: HorizontalMediaList(items: items),
+            ),
+            loading: () => const SkeletonList(height: 195),
+            error: (e, s) => const SizedBox.shrink(),
+          ),
+          
+          const SizedBox(height: 32),
+          // Discover More (Popular Series)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedTv01,
+                  color: Colors.blueAccent,
+                  size: 18,
+                ),
+                SizedBox(width: 8),
+                Text('Popular Series',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          ref.watch(trendingSeriesProvider).when(
+            data: (items) => SizedBox(
+              height: 195,
+              child: HorizontalMediaList(items: items),
+            ),
+            loading: () => const SkeletonList(height: 195),
+            error: (e, s) => const SizedBox.shrink(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -255,7 +314,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         return PressableCard(
           onTap: () => context.push('/details/$mediaType/$id'),
           onLongPress: () {
-            HapticFeedback.heavyImpact();
+            HapticFeedback.mediumImpact();
             MediaContextMenu.show(context, ref, item, mediaType);
           },
           child: ClipRRect(

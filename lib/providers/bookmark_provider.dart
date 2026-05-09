@@ -63,6 +63,12 @@ class BookmarkNotifier extends Notifier<List<Bookmark>> {
     await prefs.setStringList(_storageKey, bookmarksJson);
   }
 
+  Future<void> clearAll() async {
+    state = [];
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_storageKey);
+  }
+
   bool isBookmarked(int id, String mediaType) {
     return state.any((item) => item.id == id && item.mediaType == mediaType);
   }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../providers/api_provider.dart';
 import '../../../providers/watch_history_provider.dart';
 import '../../../widgets/tmdb_image.dart';
+import '../../../widgets/skeleton_loader.dart';
 import '../widgets/home_hero_carousel.dart';
 import '../widgets/horizontal_media_list.dart';
 import '../widgets/backdrop_media_list.dart';
@@ -46,8 +48,8 @@ class HomePage extends ConsumerWidget {
               // ── 1. Hero Carousel ────────────────────────────────────
               heroAsync.when(
                 data: (items) => HomeHeroCarousel(items: items),
-                loading: () => const HeroLoadingPlaceholder(),
-                error: (e, s) => const SizedBox(height: 600),
+                loading: () => const SkeletonLoader(width: double.infinity, height: 600),
+                error: (e, s) => const SizedBox.shrink(),
               ),
 
               // ── 2. Continue Watching — personal content always first ─
@@ -79,8 +81,10 @@ class HomePage extends ConsumerWidget {
               // "Discover" header + fire icon for the Movies sub-row
               _DiscoverHeader(
                 selectedGenre: selectedGenre,
-                onSelectGenre: (id) =>
-                    ref.read(selectedGenreProvider.notifier).select(id),
+                onSelectGenre: (id) {
+                  HapticFeedback.mediumImpact();
+                  ref.read(selectedGenreProvider.notifier).select(id);
+                },
               ),
 
               // Movies sub-header
@@ -114,7 +118,7 @@ class HomePage extends ConsumerWidget {
                 child: moviesAsync.when(
                   data: (movies) =>
                       HorizontalMediaList(items: movies, defaultType: 'movie'),
-                  loading: () => const HorizontalLoadingPlaceholder(),
+                  loading: () => const SkeletonList(height: 195),
                   error: (e, s) => _ErrorWidget(message: '$e'),
                 ),
               ),
@@ -150,7 +154,7 @@ class HomePage extends ConsumerWidget {
                 child: seriesAsync.when(
                   data: (series) =>
                       HorizontalMediaList(items: series, defaultType: 'tv'),
-                  loading: () => const HorizontalLoadingPlaceholder(),
+                  loading: () => const SkeletonList(height: 195),
                   error: (e, s) => _ErrorWidget(message: '$e'),
                 ),
               ),
@@ -171,7 +175,7 @@ class HomePage extends ConsumerWidget {
                 child: topRatedMoviesAsync.when(
                   data: (movies) =>
                       TopTenMediaList(items: movies, defaultType: 'movie'),
-                  loading: () => const TopTenLoadingPlaceholder(),
+                  loading: () => const SkeletonList(height: 230),
                   error: (e, s) => _ErrorWidget(message: '$e'),
                 ),
               ),
@@ -189,7 +193,7 @@ class HomePage extends ConsumerWidget {
                 child: upcomingMoviesAsync.when(
                   data: (movies) =>
                       BackdropMediaList(items: movies, defaultType: 'movie'),
-                  loading: () => const BackdropLoadingPlaceholder(),
+                  loading: () => const SkeletonLoader(width: double.infinity, height: 160),
                   error: (e, s) => _ErrorWidget(message: '$e'),
                 ),
               ),
@@ -207,7 +211,7 @@ class HomePage extends ConsumerWidget {
                 child: airingTodayAsync.when(
                   data: (series) =>
                       BackdropMediaList(items: series, defaultType: 'tv'),
-                  loading: () => const BackdropLoadingPlaceholder(),
+                  loading: () => const SkeletonLoader(width: double.infinity, height: 160),
                   error: (e, s) => _ErrorWidget(message: '$e'),
                 ),
               ),
@@ -225,7 +229,7 @@ class HomePage extends ConsumerWidget {
                 child: topRatedSeriesAsync.when(
                   data: (series) =>
                       TopTenMediaList(items: series, defaultType: 'tv'),
-                  loading: () => const TopTenLoadingPlaceholder(),
+                  loading: () => const SkeletonList(height: 230),
                   error: (e, s) => _ErrorWidget(message: '$e'),
                 ),
               ),
@@ -257,16 +261,29 @@ class _DiscoverHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // "Discover" section title
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Discover',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: 0.3,
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Discover',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              if (selectedGenre != null)
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 20),
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    onSelectGenre(null);
+                  },
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
