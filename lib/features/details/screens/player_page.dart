@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/server_constants.dart';
 import '../../../providers/api_provider.dart';
 import '../../../providers/watch_history_provider.dart';
+import '../../../providers/player_settings_provider.dart';
 import '../../../widgets/tmdb_image.dart';
 import '../../../widgets/mini_toast.dart';
 import '../widgets/player_about_section.dart';
@@ -48,6 +49,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _prevSeason = widget.season;
     _prevEpisode = widget.episode;
+    
+    // Auto-select last used server
+    _selectedServerIndex = ref.read(playerSettingsProvider).lastSelectedServerIndex;
 
     final double initialOffset = (widget.episode - 1) * 256.0;
     _episodesScrollController = ScrollController(
@@ -163,12 +167,14 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
             children: [
               if (backdrop != null)
                 Positioned.fill(
-                  child: Opacity(
-                    opacity: 0.3,
-                    child: TmdbImage(
-                      path: backdrop,
-                      highResSize: 'w780',
+                  child: RepaintBoundary(
+                    child: Image.network(
+                      'https://image.tmdb.org/t/p/w45$backdrop',
                       fit: BoxFit.cover,
+                      color: Colors.white.withValues(alpha: 0.3),
+                      colorBlendMode: BlendMode.modulate,
+                      cacheWidth: 20,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
@@ -213,6 +219,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                       currentServerIndex: _selectedServerIndex,
                       onServerSwitch: (index) {
                         setState(() => _selectedServerIndex = index);
+                        ref.read(playerSettingsProvider.notifier).setLastSelectedServerIndex(index);
                       },
                     ),
 
@@ -240,6 +247,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                               selectedIndex: _selectedServerIndex,
                               onSelected: (index) {
                                 setState(() => _selectedServerIndex = index);
+                                ref.read(playerSettingsProvider.notifier).setLastSelectedServerIndex(index);
                               },
                             ),
 

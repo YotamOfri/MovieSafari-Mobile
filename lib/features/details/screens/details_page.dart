@@ -42,18 +42,17 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
 
           return Stack(
             children: [
-              // 1. Dynamic Blurred Background
+              // 1. Dynamic Soft Backdrop
               if (backdrop != null)
                 Positioned.fill(
-                  child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-                    child: Opacity(
-                      opacity: 0.4,
-                      child: TmdbImage(
-                        path: backdrop,
-                        highResSize: 'w780',
-                        fit: BoxFit.cover,
-                      ),
+                  child: RepaintBoundary(
+                    child: Image.network(
+                      'https://image.tmdb.org/t/p/w45$backdrop',
+                      fit: BoxFit.cover,
+                      color: Colors.white.withValues(alpha: 0.4),
+                      colorBlendMode: BlendMode.modulate,
+                      cacheWidth: 20,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
