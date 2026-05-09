@@ -185,7 +185,9 @@ class WatchHistoryNotifier extends Notifier<List<WatchedEntry>> {
     }
 
     final updated = entry.copyWith(
-      isFinished: true, // Manually marking as finished
+      // Only movies are "finished" as a whole via this method
+      // For TV, isFinished usually means the entire show is done (not used here)
+      isFinished: mediaType == 'movie',
       finishedEpisodes: finished,
     );
 

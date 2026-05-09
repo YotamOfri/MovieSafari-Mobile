@@ -8,6 +8,7 @@ import '../../../core/server_constants.dart';
 import '../../../providers/api_provider.dart';
 import '../../../providers/watch_history_provider.dart';
 import '../../../widgets/tmdb_image.dart';
+import '../../../widgets/mini_toast.dart';
 import '../widgets/player_about_section.dart';
 import '../widgets/player_episodes_list.dart';
 import '../widgets/player_servers_list.dart';
@@ -136,14 +137,20 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
   void _manualMarkFinished() {
     _finishTimer?.cancel();
     _autoFinished = true;
-    ref
-        .read(watchHistoryProvider.notifier)
-        .markFinished(
+    ref.read(watchHistoryProvider.notifier).markFinished(
           id: widget.id,
           mediaType: widget.type,
           season: widget.season,
           episode: widget.episode,
         );
+    
+    MiniToast.show(
+      context: context,
+      message: widget.type == 'tv' ? 'Episode marked as watched' : 'Movie marked as watched',
+      icon: Icons.check_circle_rounded,
+      color: Colors.greenAccent,
+    );
+    
     setState(() {});
   }
 
