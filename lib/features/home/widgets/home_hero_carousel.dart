@@ -17,20 +17,29 @@ class _HomeHeroCarouselState extends State<HomeHeroCarousel> with SingleTickerPr
   late PageController _pageController;
   late AnimationController _progressController;
   int _currentPage = 0;
-  Timer? _autoPlayTimer;
   static const int _infiniteFactor = 10000;
+  
+  // Use a ValueNotifier to share the current scroll offset without triggering full rebuilds
+  // and avoiding the "attached to multiple views" error from PageController.page
+  final ValueNotifier<double> _pageOffset = ValueNotifier(0.0);
 
   @override
   void initState() {
     super.initState();
-    // Start in the middle of a very large range to simulate infinity
     final int initialPage = widget.items.length * (_infiniteFactor ~/ 2);
     _currentPage = initialPage;
+    _pageOffset.value = initialPage.toDouble();
     _pageController = PageController(initialPage: initialPage);
     
+    _pageController.addListener(() {
+      if (_pageController.hasClients) {
+        _pageOffset.value = _pageController.page ?? _currentPage.toDouble();
+      }
+    });
+
     _progressController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 5),
+      duration: const Duration(seconds: 8),
     );
 
     _progressController.addStatusListener((status) {
@@ -52,15 +61,17 @@ class _HomeHeroCarouselState extends State<HomeHeroCarousel> with SingleTickerPr
   }
 
   void _resetTimer() {
-    _progressController.reset();
-    _progressController.forward();
+    if (mounted) {
+      _progressController.reset();
+      _progressController.forward();
+    }
   }
 
   @override
   void dispose() {
-    _autoPlayTimer?.cancel();
     _pageController.dispose();
     _progressController.dispose();
+    _pageOffset.dispose();
     super.dispose();
   }
 
@@ -77,26 +88,30 @@ class _HomeHeroCarouselState extends State<HomeHeroCarousel> with SingleTickerPr
       width: double.infinity,
       child: Stack(
         children: [
-          PageView.builder(
-            controller: _pageController,
-            onPageChanged: (int page) {
-              setState(() {
-                _currentPage = page;
-              });
-              _resetTimer();
-            },
-            itemCount: realCount * _infiniteFactor,
-            itemBuilder: (context, index) {
-              final item = widget.items[index % realCount];
-              return _HeroItem(
-                item: item,
-                pageController: _pageController,
-                index: index,
-              );
-            },
+          Listener(
+            onPointerDown: (_) => _progressController.stop(),
+            onPointerUp: (_) => _progressController.forward(),
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (int page) {
+                setState(() {
+                  _currentPage = page;
+                });
+                _resetTimer();
+              },
+              itemCount: realCount * _infiniteFactor,
+              itemBuilder: (context, index) {
+                final item = widget.items[index % realCount];
+                return _HeroItem(
+                  item: item,
+                  index: index,
+                  pageOffset: _pageOffset,
+                );
+              },
+            ),
           ),
           
-          // Page Indicators (Modern Progress Dots)
+          // Page Indicators
           Positioned(
             bottom: 30,
             left: 0,
@@ -160,13 +175,13 @@ class _HomeHeroCarouselState extends State<HomeHeroCarousel> with SingleTickerPr
 
 class _HeroItem extends StatelessWidget {
   final Map<String, dynamic> item;
-  final PageController pageController;
   final int index;
+  final ValueNotifier<double> pageOffset;
 
   const _HeroItem({
     required this.item,
-    required this.pageController,
     required this.index,
+    required this.pageOffset,
   });
 
   @override
@@ -180,28 +195,22 @@ class _HeroItem extends StatelessWidget {
     final int id = item['id'] ?? 0;
     final String type = item['media_type'] ?? (item.containsKey('first_air_date') ? 'tv' : 'movie');
 
-    // Resolve genre names
     final List<String> genreNames = genreIds
         .map((id) => tmdbGenres[id])
         .where((name) => name != null)
         .cast<String>()
         .toList();
 
-    return AnimatedBuilder(
-      animation: pageController,
-      builder: (context, child) {
-        double value = 0;
-        if (pageController.position.haveDimensions) {
-          value = index.toDouble() - (pageController.page ?? 0);
-        }
-        
-        // Clamping value for fade/slide
+    return ValueListenableBuilder<double>(
+      valueListenable: pageOffset,
+      builder: (context, offset, child) {
+        final double value = index.toDouble() - offset;
         final double opacity = (1 - (value.abs() * 0.8)).clamp(0.0, 1.0);
         final double slideOffset = value * 100;
 
         return Stack(
           children: [
-            // Background Image (Parallax effect)
+            // Background Image (Parallax)
             Transform.translate(
               offset: Offset(value * 150, 0),
               child: TmdbImage(
@@ -242,7 +251,6 @@ class _HeroItem extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Title (Slightly faster slide)
                       Transform.translate(
                         offset: Offset(slideOffset * 0.5, 0),
                         child: Text(
@@ -261,7 +269,6 @@ class _HeroItem extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       
-                      // Metadata Row
                       Transform.translate(
                         offset: Offset(slideOffset * 0.4, 0),
                         child: Row(
@@ -295,7 +302,6 @@ class _HeroItem extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       
-                      // Description (Slightly slower slide)
                       Transform.translate(
                         offset: Offset(slideOffset * 0.3, 0),
                         child: overview != null && overview.isNotEmpty
@@ -314,7 +320,6 @@ class _HeroItem extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
 
-                      // Genre Tags
                       Transform.translate(
                         offset: Offset(slideOffset * 0.2, 0),
                         child: genreNames.isNotEmpty
@@ -342,7 +347,6 @@ class _HeroItem extends StatelessWidget {
                             : const SizedBox.shrink(),
                       ),
                       
-                      // Buttons
                       Transform.translate(
                         offset: Offset(slideOffset * 0.1, 0),
                         child: Row(
