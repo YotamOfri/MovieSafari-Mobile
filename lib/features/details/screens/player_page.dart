@@ -216,13 +216,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                       title: widget.type == 'tv'
                           ? '${details['name'] ?? 'Playing'} · S${widget.season}E${widget.episode}'
                           : details['title'] ?? 'Playing',
-                      isFinished: isCurrentFinished,
-                      type: widget.type,
-                      details: details,
-                      episode: widget.episode,
-                      season: widget.season,
-                      id: widget.id,
-                      onMarkFinished: _manualMarkFinished,
                     ),
 
                     // Video Player
@@ -245,6 +238,19 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            const SizedBox(height: 20),
+                            
+                            // NEW: Action Controls Row
+                            _PlayerControlsRow(
+                              isFinished: isCurrentFinished,
+                              type: widget.type,
+                              details: details,
+                              episode: widget.episode,
+                              season: widget.season,
+                              id: widget.id,
+                              onMarkFinished: _manualMarkFinished,
+                            ),
+
                             const SizedBox(height: 24),
 
                             // Servers Section
@@ -295,23 +301,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
 
 class _PlayerTopBar extends StatelessWidget {
   final String title;
-  final bool isFinished;
-  final String type;
-  final Map<String, dynamic> details;
-  final int episode;
-  final int season;
-  final int id;
-  final VoidCallback onMarkFinished;
 
   const _PlayerTopBar({
     required this.title,
-    required this.isFinished,
-    required this.type,
-    required this.details,
-    required this.episode,
-    required this.season,
-    required this.id,
-    required this.onMarkFinished,
   });
 
   @override
@@ -320,7 +312,6 @@ class _PlayerTopBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          // Glass Back Button
           _GlassButton(
             icon: Icons.arrow_back_ios_new_rounded,
             onTap: () {
@@ -332,7 +323,6 @@ class _PlayerTopBar extends StatelessWidget {
             },
           ),
           const SizedBox(width: 16),
-          
           Expanded(
             child: Text(
               title,
@@ -346,29 +336,82 @@ class _PlayerTopBar extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          
-          const SizedBox(width: 8),
-          
-          // Mark Done Button
-          _GlassActionChip(
-            icon: isFinished ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
-            label: isFinished ? 'Watched' : 'Mark Done',
-            color: isFinished ? Colors.greenAccent : Colors.white,
-            onTap: isFinished ? null : onMarkFinished,
-          ),
+        ],
+      ),
+    );
+  }
+}
 
-          if (type == 'tv') ...[
-            const SizedBox(width: 8),
+class _PlayerControlsRow extends StatelessWidget {
+  final bool isFinished;
+  final String type;
+  final Map<String, dynamic> details;
+  final int episode;
+  final int season;
+  final int id;
+  final VoidCallback onMarkFinished;
+
+  const _PlayerControlsRow({
+    required this.isFinished,
+    required this.type,
+    required this.details,
+    required this.episode,
+    required this.season,
+    required this.id,
+    required this.onMarkFinished,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasNext = type == 'tv' && _hasNextEpisode(details, season, episode);
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (hasNext) ...[
+            Expanded(
+              child: _GlassActionChip(
+                icon: isFinished ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
+                label: isFinished ? 'Watched' : 'Mark Watched',
+                color: isFinished ? Colors.greenAccent : Colors.white,
+                onTap: isFinished ? null : onMarkFinished,
+              ),
+            ),
+            const SizedBox(width: 12),
             _NextEpisodeButton(
               details: details,
               currentSeason: season,
               currentEpisode: episode,
               id: id,
+              isExpanded: true,
+            ),
+          ] else ...[
+            // Single button centered with fixed proportional width
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.5,
+              child: _GlassActionChip(
+                icon: isFinished ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
+                label: isFinished ? 'Watched' : 'Mark Watched',
+                color: isFinished ? Colors.greenAccent : Colors.white,
+                onTap: isFinished ? null : onMarkFinished,
+              ),
             ),
           ],
         ],
       ),
     );
+  }
+
+  bool _hasNextEpisode(Map<String, dynamic> details, int season, int episode) {
+    final seasons = details['seasons'] as List<dynamic>? ?? [];
+    final currentSeasonData = seasons.firstWhere(
+      (s) => s['season_number'] == season,
+      orElse: () => null,
+    );
+    final totalEpisodes = currentSeasonData?['episode_count'] as int? ?? 0;
+    return episode < totalEpisodes;
   }
 }
 
@@ -428,12 +471,14 @@ class _GlassActionChip extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              height: 44,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(icon, color: color, size: 16),
                   const SizedBox(width: 6),
@@ -460,12 +505,14 @@ class _NextEpisodeButton extends StatelessWidget {
   final int currentSeason;
   final int currentEpisode;
   final int id;
+  final bool isExpanded;
 
   const _NextEpisodeButton({
     required this.details,
     required this.currentSeason,
     required this.currentEpisode,
     required this.id,
+    this.isExpanded = false,
   });
 
   @override
@@ -480,7 +527,7 @@ class _NextEpisodeButton extends StatelessWidget {
 
     if (!hasNext) return const SizedBox();
 
-    return _GlassButton(
+    final button = _GlassButton(
       icon: Icons.skip_next_rounded,
       onTap: () {
         context.pushReplacement(
@@ -488,5 +535,50 @@ class _NextEpisodeButton extends StatelessWidget {
         );
       },
     );
+
+    if (isExpanded) {
+      return Expanded(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Material(
+              color: Colors.white.withValues(alpha: 0.08),
+              child: InkWell(
+                onTap: () {
+                  context.pushReplacement(
+                    '/player/tv/$id?season=$currentSeason&episode=${currentEpisode + 1}',
+                  );
+                },
+                child: Container(
+                  height: 44,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.skip_next_rounded, color: Colors.white, size: 18),
+                      SizedBox(width: 8),
+                      Text(
+                        'Next Episode',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return button;
   }
 }
