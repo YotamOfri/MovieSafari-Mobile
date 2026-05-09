@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -595,14 +596,30 @@ class _BookmarkButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isBookmarked = ref.watch(bookmarkProvider).any((b) => b.id == id && b.mediaType == type);
 
-    return IconButton(
-      icon: HugeIcon(
-        icon: isBookmarked
-            ? HugeIcons.strokeRoundedBookmark02
-            : HugeIcons.strokeRoundedBookmark01,
-        color: isBookmarked ? Colors.blueAccent : Colors.white,
-      ),
-      onPressed: () {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.1),
+                width: 1.0,
+              ),
+            ),
+            child: IconButton(
+              icon: HugeIcon(
+                icon: isBookmarked
+                    ? HugeIcons.strokeRoundedBookmark02
+                    : HugeIcons.strokeRoundedBookmark01,
+                color: isBookmarked ? Colors.blueAccent : Colors.white,
+                size: 20,
+              ),
+              onPressed: () {
         final bookmark = Bookmark(
           id: id,
           title: title,
@@ -622,6 +639,10 @@ class _BookmarkButton extends ConsumerWidget {
           },
         );
       },
-    );
+    ),
+  ),
+),
+),
+);
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -110,16 +111,26 @@ class _WatchHistoryPageState extends ConsumerState<WatchHistoryPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.blueAccent.withValues(alpha: 0.05),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.history_rounded,
-                size: 64,
-                color: Colors.blueAccent.withValues(alpha: 0.4),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(60),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 1.0,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.history_rounded,
+                    size: 64,
+                    color: Colors.blueAccent.withValues(alpha: 0.8),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 32),
