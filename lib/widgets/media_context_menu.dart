@@ -7,6 +7,7 @@ import '../providers/bookmark_provider.dart';
 import '../providers/watch_history_provider.dart';
 import '../providers/api_provider.dart';
 import 'tmdb_image.dart';
+import 'custom_toast.dart';
 
 class MediaContextMenu {
   static void show(BuildContext context, WidgetRef ref,
@@ -175,6 +176,7 @@ class MediaContextMenu {
                     color: Colors.blueAccent,
                     onTap: () {
                       final title = displayTitle;
+                      final wasBookmarked = isBookmarked;
                       bookmarkNotifier.toggleBookmark(Bookmark(
                           id: id,
                           title: title,
@@ -183,72 +185,10 @@ class MediaContextMenu {
                       
                       Navigator.pop(sheetContext);
                       
-                      // Show Premium Toast
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          behavior: SnackBarBehavior.floating,
-                          backgroundColor: Colors.transparent,
-                          elevation: 0,
-                          margin: const EdgeInsets.only(bottom: 20, left: 24, right: 24),
-                          content: TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0.0, end: 1.0),
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.easeOutBack,
-                            builder: (context, value, child) {
-                              return Transform.translate(
-                                offset: Offset(0, 30 * (1 - value)),
-                                child: Opacity(
-                                  opacity: value.clamp(0.0, 1.0),
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(24),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.2),
-                                        blurRadius: 30,
-                                        offset: const Offset(0, 10),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        isBookmarked ? Icons.bookmark_remove : Icons.bookmark_add,
-                                        color: Colors.white,
-                                        size: 24,
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Text(
-                                          isBookmarked 
-                                              ? 'Removed $title' 
-                                              : 'Added $title to Bookmarks',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: -0.2,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          duration: const Duration(seconds: 2),
-                        ),
+                      CustomToast.show(
+                        context,
+                        wasBookmarked ? 'Removed $title' : 'Added $title to Bookmarks',
+                        wasBookmarked ? Icons.bookmark_remove : Icons.bookmark_add,
                       );
                     },
                   ),
