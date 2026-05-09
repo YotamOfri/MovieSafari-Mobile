@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,28 +30,76 @@ class HomePage extends ConsumerWidget {
     final selectedGenre = ref.watch(selectedGenreProvider);
 
     return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(heroCarouselProvider);
-          ref.invalidate(filteredMoviesProvider);
-          ref.invalidate(filteredSeriesProvider);
-          ref.invalidate(topRatedMoviesProvider);
-          ref.invalidate(upcomingMoviesProvider);
-          ref.invalidate(topRatedSeriesProvider);
-          ref.invalidate(airingTodaySeriesProvider);
-          ref.invalidate(trendingMoviesProvider);
-          ref.invalidate(trendingSeriesProvider);
-        },
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── 1. Hero Carousel ────────────────────────────────────
-              heroAsync.when(
-                data: (items) => HomeHeroCarousel(items: items),
-                loading: () => const SkeletonLoader(width: double.infinity, height: 600),
-                error: (e, s) => const SizedBox.shrink(),
+      backgroundColor: const Color(0xFF0F1014),
+      body: Stack(
+        children: [
+          // 1. Dynamic Blurred Backdrop
+          heroAsync.when(
+            data: (items) {
+              if (items.isEmpty) return const SizedBox.shrink();
+              final String? backdrop = items.first['backdrop_path'];
+              if (backdrop == null) return const SizedBox.shrink();
+
+              return Positioned.fill(
+                child: ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                  child: Opacity(
+                    opacity: 0.4,
+                    child: TmdbImage(
+                      path: backdrop,
+                      highResSize: 'w780',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              );
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (e, s) => const SizedBox.shrink(),
+          ),
+
+          // 2. Cinematic Shadow Overlays
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF0F1014).withValues(alpha: 0.2),
+                    const Color(0xFF0F1014).withValues(alpha: 0.6),
+                    const Color(0xFF0F1014),
+                  ],
+                  stops: const [0.0, 0.4, 0.8],
+                ),
               ),
+            ),
+          ),
+
+          // 3. Main Content
+          RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(heroCarouselProvider);
+              ref.invalidate(filteredMoviesProvider);
+              ref.invalidate(filteredSeriesProvider);
+              ref.invalidate(topRatedMoviesProvider);
+              ref.invalidate(upcomingMoviesProvider);
+              ref.invalidate(topRatedSeriesProvider);
+              ref.invalidate(airingTodaySeriesProvider);
+              ref.invalidate(trendingMoviesProvider);
+              ref.invalidate(trendingSeriesProvider);
+            },
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── 1. Hero Carousel ────────────────────────────────────
+                  heroAsync.when(
+                    data: (items) => HomeHeroCarousel(items: items),
+                    loading: () => const SkeletonLoader(width: double.infinity, height: 600),
+                    error: (e, s) => const SizedBox.shrink(),
+                  ),
 
               // ── 2. Continue Watching — personal content always first ─
               if (continueWatching.isNotEmpty) ...[
@@ -239,7 +288,9 @@ class HomePage extends ConsumerWidget {
           ),
         ),
       ),
-    );
+    ],
+  ),
+);
   }
 }
 
