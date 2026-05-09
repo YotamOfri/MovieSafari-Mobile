@@ -88,7 +88,11 @@ class _HomeHeroCarouselState extends State<HomeHeroCarousel> with SingleTickerPr
             itemCount: realCount * _infiniteFactor,
             itemBuilder: (context, index) {
               final item = widget.items[index % realCount];
-              return _HeroItem(item: item);
+              return _HeroItem(
+                item: item,
+                pageController: _pageController,
+                index: index,
+              );
             },
           ),
           
@@ -156,8 +160,14 @@ class _HomeHeroCarouselState extends State<HomeHeroCarousel> with SingleTickerPr
 
 class _HeroItem extends StatelessWidget {
   final Map<String, dynamic> item;
+  final PageController pageController;
+  final int index;
 
-  const _HeroItem({required this.item});
+  const _HeroItem({
+    required this.item,
+    required this.pageController,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -177,152 +187,189 @@ class _HeroItem extends StatelessWidget {
         .cast<String>()
         .toList();
 
-    return Stack(
-      children: [
-        // Background Image
-        TmdbImage(
-          path: backdropPath,
-          highResSize: 'original',
-          height: 600,
-          width: double.infinity,
-        ),
-        // Gradient Overlay
-        Container(
-          height: 600,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                const Color(0xFF0F1014).withValues(alpha: 0.4),
-                const Color(0xFF0F1014).withValues(alpha: 0.9),
-                const Color(0xFF0F1014),
-              ],
-              stops: const [0.0, 0.4, 0.7, 1.0],
-            ),
-          ),
-        ),
+    return AnimatedBuilder(
+      animation: pageController,
+      builder: (context, child) {
+        double value = 0;
+        if (pageController.position.haveDimensions) {
+          value = index.toDouble() - (pageController.page ?? 0);
+        }
         
-        // Content
-        Positioned(
-          bottom: 70,
-          left: 0,
-          right: 0,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Title
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: -0.5,
-                    height: 1.1,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                
-                // Metadata Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
-                          const SizedBox(width: 4),
-                          Text(
-                            rating.toStringAsFixed(1),
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    if (firstAirDate != null && firstAirDate.isNotEmpty)
-                      Text(
-                        firstAirDate.split('-')[0],
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13, fontWeight: FontWeight.w600),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                
-                // Description (More readable)
-                if (overview != null && overview.isNotEmpty)
-                  Text(
-                    overview,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.7),
-                      height: 1.5,
-                    ),
-                  ),
-                const SizedBox(height: 16),
+        // Clamping value for fade/slide
+        final double opacity = (1 - (value.abs() * 0.8)).clamp(0.0, 1.0);
+        final double slideOffset = value * 100;
 
-                // Genre Tags (Floating style) - Moved below description
-                if (genreNames.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 24.0),
-                    child: Wrap(
-                      spacing: 8,
-                      alignment: WrapAlignment.center,
-                      children: genreNames.take(3).map((genre) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-                          ),
-                          child: Text(
-                            genre,
-                            style: const TextStyle(fontSize: 10, color: Colors.white70),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                
-                // Buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _PrimaryButton(
-                      label: 'Watch Now',
-                      icon: Icons.play_arrow_rounded,
-                      onTap: () => context.push('/player/$type/$id'),
-                    ),
-                    const SizedBox(width: 16),
-                    _SecondaryButton(
-                      label: 'Details',
-                      icon: Icons.info_outline_rounded,
-                      onTap: () => context.push('/details/$type/$id'),
-                    ),
-                  ],
-                ),
-              ],
+        return Stack(
+          children: [
+            // Background Image (Parallax effect)
+            Transform.translate(
+              offset: Offset(value * 150, 0),
+              child: TmdbImage(
+                path: backdropPath,
+                highResSize: 'original',
+                height: 600,
+                width: double.infinity,
+              ),
             ),
-          ),
-        ),
-      ],
+            // Gradient Overlay
+            Container(
+              height: 600,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    const Color(0xFF0F1014).withValues(alpha: 0.4),
+                    const Color(0xFF0F1014).withValues(alpha: 0.9),
+                    const Color(0xFF0F1014),
+                  ],
+                  stops: const [0.0, 0.4, 0.7, 1.0],
+                ),
+              ),
+            ),
+            
+            // Content
+            Positioned(
+              bottom: 70,
+              left: 0,
+              right: 0,
+              child: Opacity(
+                opacity: opacity,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Title (Slightly faster slide)
+                      Transform.translate(
+                        offset: Offset(slideOffset * 0.5, 0),
+                        child: Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                            height: 1.1,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      
+                      // Metadata Row
+                      Transform.translate(
+                        offset: Offset(slideOffset * 0.4, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    rating.toStringAsFixed(1),
+                                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            if (firstAirDate != null && firstAirDate.isNotEmpty)
+                              Text(
+                                firstAirDate.split('-')[0],
+                                style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Description (Slightly slower slide)
+                      Transform.translate(
+                        offset: Offset(slideOffset * 0.3, 0),
+                        child: overview != null && overview.isNotEmpty
+                            ? Text(
+                                overview,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                  height: 1.5,
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Genre Tags
+                      Transform.translate(
+                        offset: Offset(slideOffset * 0.2, 0),
+                        child: genreNames.isNotEmpty
+                            ? Padding(
+                                padding: const EdgeInsets.only(bottom: 24.0),
+                                child: Wrap(
+                                  spacing: 8,
+                                  alignment: WrapAlignment.center,
+                                  children: genreNames.take(3).map((genre) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.08),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                                      ),
+                                      child: Text(
+                                        genre,
+                                        style: const TextStyle(fontSize: 10, color: Colors.white70),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                      
+                      // Buttons
+                      Transform.translate(
+                        offset: Offset(slideOffset * 0.1, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _PrimaryButton(
+                              label: 'Watch Now',
+                              icon: Icons.play_arrow_rounded,
+                              onTap: () => context.push('/player/$type/$id'),
+                            ),
+                            const SizedBox(width: 16),
+                            _SecondaryButton(
+                              label: 'Details',
+                              icon: Icons.info_outline_rounded,
+                              onTap: () => context.push('/details/$type/$id'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
