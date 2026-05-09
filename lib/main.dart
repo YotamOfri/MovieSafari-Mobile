@@ -32,20 +32,41 @@ final _router = GoRouter(
     // 1. A Top-Level Route (No Navbar here)
     GoRoute(
       path: '/details/:type/:id',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final type = state.pathParameters['type']!;
         final id = int.parse(state.pathParameters['id']!);
-        return DetailsPage(type: type, id: id);
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: DetailsPage(type: type, id: id),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: animation.drive(
+                Tween(begin: const Offset(0, 0.1), end: Offset.zero)
+                    .chain(CurveTween(curve: Curves.easeOutCubic)),
+              ),
+              child: FadeTransition(opacity: animation, child: child),
+            );
+          },
+        );
       },
     ),
     GoRoute(
       path: '/player/:type/:id',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final type = state.pathParameters['type']!;
         final id = int.parse(state.pathParameters['id']!);
-        final season = int.tryParse(state.uri.queryParameters['season'] ?? '1') ?? 1;
-        final episode = int.tryParse(state.uri.queryParameters['episode'] ?? '1') ?? 1;
-        return PlayerPage(type: type, id: id, season: season, episode: episode);
+        final season =
+            int.tryParse(state.uri.queryParameters['season'] ?? '1') ?? 1;
+        final episode =
+            int.tryParse(state.uri.queryParameters['episode'] ?? '1') ?? 1;
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: PlayerPage(
+              type: type, id: id, season: season, episode: episode),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
       },
     ),
 

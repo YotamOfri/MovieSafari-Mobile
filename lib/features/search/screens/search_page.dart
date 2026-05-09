@@ -197,7 +197,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                           color: Colors.white.withValues(alpha: 0.07),
                           borderRadius: BorderRadius.circular(20),
                           border:
-                              Border.all(color: Colors.white.withOpacity(0.08)),
+                              Border.all(color: Colors.white.withValues(alpha: 0.08)),
                         ),
                         child: Row(
                           children: [
@@ -217,6 +217,57 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             ),
             const SizedBox(height: 32),
           ],
+
+          // Categories Section
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text('Categories',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 90,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                _CategoryCard(
+                  label: 'Action',
+                  icon: HugeIcons.strokeRoundedSword01,
+                  color: Colors.redAccent,
+                  onTap: () => _applyHistoryQuery('Action'),
+                ),
+                _CategoryCard(
+                  label: 'Comedy',
+                  icon: HugeIcons.strokeRoundedChampion,
+                  color: Colors.orangeAccent,
+                  onTap: () => _applyHistoryQuery('Comedy'),
+                ),
+                _CategoryCard(
+                  label: 'Horror',
+                  icon: HugeIcons.strokeRoundedStar,
+                  color: Colors.purpleAccent,
+                  onTap: () => _applyHistoryQuery('Horror'),
+                ),
+                _CategoryCard(
+                  label: 'Sci-Fi',
+                  icon: HugeIcons.strokeRoundedUfo01,
+                  color: Colors.blueAccent,
+                  onTap: () => _applyHistoryQuery('Sci-Fi'),
+                ),
+                _CategoryCard(
+                  label: 'Drama',
+                  icon: HugeIcons.strokeRoundedRanking,
+                  color: Colors.greenAccent,
+                  onTap: () => _applyHistoryQuery('Drama'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 40),
 
           // Trending Now Section
           const Padding(
@@ -333,7 +384,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.greenAccent.withOpacity(0.85),
+                        color: Colors.greenAccent.withValues(alpha: 0.85),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Row(
@@ -379,7 +430,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.7),
+                          Colors.black.withValues(alpha: 0.7),
                           Colors.black,
                         ],
                       ),
@@ -419,6 +470,58 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           ),
         );
       },
+    );
+  }
+}
+
+class _CategoryCard extends StatelessWidget {
+  final String label;
+  final List<List<dynamic>> icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _CategoryCard({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 12),
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: 100,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              HugeIcon(icon: icon, color: color, size: 28),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

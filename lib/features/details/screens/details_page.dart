@@ -523,7 +523,7 @@ class _CastList extends ConsumerWidget {
           data: (cast) {
             if (cast.isEmpty) return const SizedBox.shrink();
             return SizedBox(
-              height: 140,
+              height: 160,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -551,7 +551,15 @@ class _CastList extends ConsumerWidget {
                           person['name'] ?? 'Unknown',
                           style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
-                          maxLines: 2,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          person['character'] ?? '',
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 10),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -561,7 +569,7 @@ class _CastList extends ConsumerWidget {
               ),
             );
           },
-          loading: () => const SkeletonList(height: 140),
+          loading: () => const SkeletonList(height: 160),
           error: (e, s) => const SizedBox.shrink(),
         ),
       ],

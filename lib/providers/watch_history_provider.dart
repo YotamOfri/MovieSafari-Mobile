@@ -29,8 +29,6 @@ class WatchedEntry {
     this.finishedEpisodes = const {},
   });
 
-  String get _episodeKey => '${lastSeason}_$lastEpisode';
-
   bool isEpisodeFinished(int season, int episode) =>
       finishedEpisodes.contains('${season}_$episode');
 

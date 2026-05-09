@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hugeicons/hugeicons.dart';
 import '../../../core/server_constants.dart';
 import '../../../providers/api_provider.dart';
 import '../../../providers/watch_history_provider.dart';
@@ -48,6 +47,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _prevSeason = widget.season;
     _prevEpisode = widget.episode;
+    
     final double initialOffset = (widget.episode - 1) * 232.0;
     _episodesScrollController =
         ScrollController(initialScrollOffset: initialOffset);
