@@ -202,34 +202,62 @@ class WatchHistoryNotifier extends Notifier<List<WatchedEntry>> {
     required String mediaType,
     String? title,
     String? posterPath,
+    int? season,
+    int? episode,
   }) async {
     final entry = getEntry(id, mediaType);
-    if (entry != null && entry.isFinished) {
-      // Unmark
-      final idx =
-          state.indexWhere((e) => e.id == id && e.mediaType == mediaType);
-
-      // If it's a movie OR a TV series with no individual episodes finished,
-      // remove it from history entirely to keep it clean.
-      if (mediaType == 'movie' || entry.finishedEpisodes.isEmpty) {
-        final newList = List<WatchedEntry>.from(state);
-        newList.removeAt(idx);
-        state = newList;
-      } else {
-        // Just unmark as finished but keep in history (since they watched some eps)
-        final updated = state[idx].copyWith(isFinished: false);
+    if (entry != null) {
+      final idx = state.indexWhere((e) => e.id == id && e.mediaType == mediaType);
+      
+      if (mediaType == 'tv' && season != null && episode != null) {
+        // Toggle specific episode
+        Set<String> finished = Set<String>.from(entry.finishedEpisodes);
+        final key = '${season}_$episode';
+        if (finished.contains(key)) {
+          finished.remove(key);
+        } else {
+          finished.add(key);
+        }
+        
+        final updated = entry.copyWith(finishedEpisodes: finished);
         final newList = List<WatchedEntry>.from(state);
         newList[idx] = updated;
         state = newList;
+      } else {
+        // Toggle entire movie/show
+        if (entry.isFinished) {
+          // Unmark
+          if (mediaType == 'movie' || entry.finishedEpisodes.isEmpty) {
+            final newList = List<WatchedEntry>.from(state);
+            newList.removeAt(idx);
+            state = newList;
+          } else {
+            final updated = state[idx].copyWith(isFinished: false);
+            final newList = List<WatchedEntry>.from(state);
+            newList[idx] = updated;
+            state = newList;
+          }
+        } else {
+          // Mark as finished
+          await markFinished(
+            id: id,
+            mediaType: mediaType,
+            title: title,
+            posterPath: posterPath,
+          );
+          return;
+        }
       }
       await _save();
     } else {
-      // Mark
+      // Mark as finished (create new)
       await markFinished(
         id: id,
         mediaType: mediaType,
         title: title,
         posterPath: posterPath,
+        season: season,
+        episode: episode,
       );
     }
   }

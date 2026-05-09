@@ -24,8 +24,8 @@ class HomePage extends ConsumerWidget {
     final upcomingMoviesAsync = ref.watch(upcomingMoviesProvider);
     final topRatedSeriesAsync = ref.watch(topRatedSeriesProvider);
     final airingTodayAsync = ref.watch(airingTodaySeriesProvider);
-    final continueWatching =
-        ref.read(watchHistoryProvider.notifier).continueWatching;
+    final history = ref.watch(watchHistoryProvider);
+    final continueWatching = history.where((e) => !e.isFinished).take(10).toList();
     final selectedGenre = ref.watch(selectedGenreProvider);
 
     return Scaffold(

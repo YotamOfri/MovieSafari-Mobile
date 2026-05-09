@@ -23,7 +23,7 @@ class PlayerEpisodesList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final historyNotifier = ref.watch(watchHistoryProvider.notifier);
+    final history = ref.watch(watchHistoryProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,38 +59,31 @@ class PlayerEpisodesList extends ConsumerWidget {
                 controller: scrollController,
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                physics: const BouncingScrollPhysics(),
                 itemCount: episodes.length,
+                physics: const BouncingScrollPhysics(),
                 separatorBuilder: (context, index) => const SizedBox(width: 16),
                 itemBuilder: (context, index) {
                   final episode = episodes[index];
-                  final int epNumber = episode['episode_number'];
-                  final String epName = episode['name'] ?? 'Episode $epNumber';
-                  final String? epStill = episode['still_path'];
-                  final int? epRuntime = episode['runtime'];
-                  final bool isSelected = currentEpisode == epNumber;
-                  final bool isWatched = historyNotifier.isEpisodeFinished(id, season, epNumber);
+                  final isSelected = episode['episode_number'] == currentEpisode;
+                  
+                  final entry = history.where((e) => e.id == id && e.mediaType == 'tv').firstOrNull;
+                  final isWatched = entry?.isEpisodeFinished(season, episode['episode_number']) ?? false;
 
                   return _EpisodeCard(
-                    epNumber: epNumber,
-                    epName: epName,
-                    epStill: epStill,
-                    epRuntime: epRuntime,
+                    episode: episode,
                     isSelected: isSelected,
                     isWatched: isWatched,
                     onTap: () {
-                      if (!isSelected) {
-                        context.pushReplacement('/player/tv/$id?season=$season&episode=$epNumber');
-                      }
+                      context.pushReplacement(
+                        '/player/tv/$id?season=$season&episode=${episode['episode_number']}',
+                      );
                     },
                   );
                 },
               );
             },
             loading: () => const Center(child: CircularProgressIndicator(color: Colors.blueAccent)),
-            error: (_, __) => const Center(
-              child: Text('Error loading episodes', style: TextStyle(color: Colors.white54)),
-            ),
+            error: (e, s) => Center(child: Text('Error loading episodes', style: TextStyle(color: Colors.white.withValues(alpha: 0.5)))),
           ),
         ),
       ],
@@ -99,19 +92,13 @@ class PlayerEpisodesList extends ConsumerWidget {
 }
 
 class _EpisodeCard extends StatelessWidget {
-  final int epNumber;
-  final String epName;
-  final String? epStill;
-  final int? epRuntime;
+  final Map<String, dynamic> episode;
   final bool isSelected;
   final bool isWatched;
   final VoidCallback onTap;
 
   const _EpisodeCard({
-    required this.epNumber,
-    required this.epName,
-    required this.epStill,
-    required this.epRuntime,
+    required this.episode,
     required this.isSelected,
     required this.isWatched,
     required this.onTap,
@@ -119,6 +106,11 @@ class _EpisodeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final int epNumber = episode['episode_number'] ?? 0;
+    final String epName = episode['name'] ?? 'Episode $epNumber';
+    final String? epStill = episode['still_path'];
+    final int? epRuntime = episode['runtime'];
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(

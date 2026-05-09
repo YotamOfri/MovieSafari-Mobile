@@ -100,9 +100,10 @@ class EpisodeSelector extends ConsumerWidget {
                       final int epNumber = episode['episode_number'];
                       final String epName = episode['name'] ?? 'Episode $epNumber';
                       final String? epStill = episode['still_path'];
-                      final bool isWatched = ref
-                          .read(watchHistoryProvider.notifier)
-                          .isEpisodeFinished(id, selectedSeason, epNumber);
+                      
+                      final history = ref.watch(watchHistoryProvider);
+                      final entry = history.where((e) => e.id == id && e.mediaType == 'tv').firstOrNull;
+                      final bool isWatched = entry?.isEpisodeFinished(selectedSeason, epNumber) ?? false;
 
                       return GestureDetector(
                         onTap: () {

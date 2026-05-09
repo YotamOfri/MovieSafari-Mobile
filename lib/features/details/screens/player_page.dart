@@ -165,9 +165,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         ? ref.watch(movieDetailsProvider(widget.id))
         : ref.watch(tvDetailsProvider(widget.id));
 
-    final historyEntry = ref
-        .watch(watchHistoryProvider.notifier)
-        .getEntry(widget.id, widget.type);
+    final historyEntry = ref.watch(watchHistoryProvider).where(
+      (e) => e.id == widget.id && e.mediaType == widget.type,
+    ).firstOrNull;
 
     final isCurrentFinished = widget.type == 'movie'
         ? (historyEntry?.isFinished ?? false)
@@ -263,7 +263,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                               episode: widget.episode,
                               season: widget.season,
                               id: widget.id,
-                              onMarkFinished: _manualMarkFinished,
                             ),
 
                             const SizedBox(height: 24),
@@ -358,14 +357,13 @@ class _PlayerTopBar extends StatelessWidget {
   }
 }
 
-class _PlayerControlsRow extends StatelessWidget {
+class _PlayerControlsRow extends ConsumerWidget {
   final bool isFinished;
   final String type;
   final Map<String, dynamic> details;
   final int episode;
   final int season;
   final int id;
-  final VoidCallback onMarkFinished;
 
   const _PlayerControlsRow({
     required this.isFinished,
@@ -374,11 +372,10 @@ class _PlayerControlsRow extends StatelessWidget {
     required this.episode,
     required this.season,
     required this.id,
-    required this.onMarkFinished,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final shouldShowNext = type == 'tv' && _shouldShowNextButton(details, season, episode);
     
     return Padding(
@@ -394,7 +391,24 @@ class _PlayerControlsRow extends StatelessWidget {
                     : Icons.check_circle_outline_rounded,
                 label: isFinished ? 'Watched' : 'Mark Watched',
                 color: isFinished ? Colors.greenAccent : Colors.white,
-                onTap: isFinished ? null : onMarkFinished,
+                onTap: () {
+                  ref.read(watchHistoryProvider.notifier).toggleFinished(
+                    id: id,
+                    mediaType: type,
+                    season: season,
+                    episode: episode,
+                  );
+                  
+                  final isNowWatched = !isFinished;
+                  MiniToast.show(
+                    context: context,
+                    message: isNowWatched 
+                        ? (type == 'tv' ? 'Episode marked as watched' : 'Movie marked as watched')
+                        : (type == 'tv' ? 'Episode unmarked' : 'Movie unmarked'),
+                    icon: isNowWatched ? Icons.check_circle_rounded : Icons.remove_circle_outline_rounded,
+                    color: isNowWatched ? Colors.greenAccent : Colors.white70,
+                  );
+                },
               ),
             ),
             const SizedBox(width: 12),
@@ -415,7 +429,24 @@ class _PlayerControlsRow extends StatelessWidget {
                     : Icons.check_circle_outline_rounded,
                 label: isFinished ? 'Watched' : 'Mark Watched',
                 color: isFinished ? Colors.greenAccent : Colors.white,
-                onTap: isFinished ? null : onMarkFinished,
+                onTap: () {
+                  ref.read(watchHistoryProvider.notifier).toggleFinished(
+                    id: id,
+                    mediaType: type,
+                    season: season,
+                    episode: episode,
+                  );
+                  
+                  final isNowWatched = !isFinished;
+                  MiniToast.show(
+                    context: context,
+                    message: isNowWatched 
+                        ? (type == 'tv' ? 'Episode marked as watched' : 'Movie marked as watched')
+                        : (type == 'tv' ? 'Episode unmarked' : 'Movie unmarked'),
+                    icon: isNowWatched ? Icons.check_circle_rounded : Icons.remove_circle_outline_rounded,
+                    color: isNowWatched ? Colors.greenAccent : Colors.white70,
+                  );
+                },
               ),
             ),
           ],
@@ -460,7 +491,7 @@ class _GlassButton extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Material(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: Colors.white.withValues(alpha: 0.1),
           child: InkWell(
             onTap: onTap,
             child: Container(
@@ -532,7 +563,7 @@ class _GlassActionChip extends StatelessWidget {
   }
 }
 
-class _NextEpisodeButton extends StatelessWidget {
+class _NextEpisodeButton extends ConsumerWidget {
   final Map<String, dynamic> details;
   final int currentSeason;
   final int currentEpisode;
@@ -548,7 +579,7 @@ class _NextEpisodeButton extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final seasons = details['seasons'] as List<dynamic>? ?? [];
     final currentSeasonData = seasons.firstWhere(
       (s) => s['season_number'] == currentSeason,
@@ -575,8 +606,6 @@ class _NextEpisodeButton extends StatelessWidget {
     }
 
     final bool hasNextSeason = nextSeasonData != null;
-    print(nextSeasonData);
-    print(hasNextSeason);
     if (!hasNextInSeason && !hasNextSeason) return const SizedBox();
 
     final bool isNextSeason = !hasNextInSeason && hasNextSeason;
@@ -587,6 +616,14 @@ class _NextEpisodeButton extends StatelessWidget {
     final int targetEpisode = isNextSeason ? 1 : currentEpisode + 1;
 
     void navigateToNext() {
+      // AUTO-MARK current episode as watched before moving
+      ref.read(watchHistoryProvider.notifier).markFinished(
+        id: id,
+        mediaType: 'tv',
+        season: currentSeason,
+        episode: currentEpisode,
+      );
+
       context.pushReplacement(
         '/player/tv/$id?season=$targetSeason&episode=$targetEpisode',
       );

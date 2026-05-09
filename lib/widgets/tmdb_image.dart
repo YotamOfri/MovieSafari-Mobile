@@ -39,25 +39,26 @@ class TmdbImage extends StatelessWidget {
           ? Image.network(
               'https://image.tmdb.org/t/p/$highResSize$path',
               fit: fit,
-              cacheWidth: 400, // Hardware downsampling for max scroll FPS
+              cacheWidth: 400,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: const Color(0xFF1A1C23),
+                child: const Center(child: Icon(Icons.broken_image_rounded, color: Colors.white10, size: 24)),
+              ),
             )
           : Stack(
               fit: StackFit.expand,
               children: [
-            // Low res blurred image (using ImageFiltered instead of BackdropFilter for better FPS)
-            ImageFiltered(
-              imageFilter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
-              child: Image.network(
-                'https://image.tmdb.org/t/p/$lowResSize$path',
-                fit: fit,
-              ),
+            // Low res blurred image
+            Image.network(
+              'https://image.tmdb.org/t/p/$lowResSize$path',
+              fit: fit,
+              errorBuilder: (context, error, stackTrace) => Container(color: const Color(0xFF1A1C23)),
             ),
-            // Slight dark tint over the placeholder
-            Container(color: Colors.black.withOpacity(0.1)),
             // High res image fading in
             Image.network(
               'https://image.tmdb.org/t/p/$highResSize$path',
               fit: fit,
+              errorBuilder: (context, error, stackTrace) => const SizedBox(),
               frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
                 if (wasSynchronouslyLoaded) {
                   return child;
