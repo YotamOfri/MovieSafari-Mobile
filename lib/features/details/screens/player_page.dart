@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/server_constants.dart';
 import '../../../providers/api_provider.dart';
 import '../../../providers/watch_history_provider.dart';
+import '../../../widgets/tmdb_image.dart';
 import '../widgets/player_about_section.dart';
 import '../widgets/player_episodes_list.dart';
 import '../widgets/player_servers_list.dart';
@@ -33,11 +35,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
   int _selectedServerIndex = 0;
   late final ScrollController _episodesScrollController;
 
-  // Track the episode that was playing BEFORE the user switches
   int? _prevSeason;
   int? _prevEpisode;
 
-  // 75% auto-finish timer
   Timer? _finishTimer;
   bool _autoFinished = false;
 
@@ -58,7 +58,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.episode != widget.episode ||
         oldWidget.season != widget.season) {
-      // Store previous episode before updating
       _prevSeason = oldWidget.season;
       _prevEpisode = oldWidget.episode;
 
@@ -70,7 +69,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         );
       }
 
-      // Reset auto-finish state for new episode
       _finishTimer?.cancel();
       _autoFinished = false;
     }
@@ -84,12 +82,10 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     super.dispose();
   }
 
-  // Called when the user taps the play gate button
   void _onPlayPressed(Map<String, dynamic> details) {
     final title = details['title'] ?? details['name'] ?? 'Unknown';
     final posterPath = details['poster_path'] as String?;
 
-    // Save to watch history
     ref.read(watchHistoryProvider.notifier).markStarted(
           id: widget.id,
           mediaType: widget.type,
@@ -101,7 +97,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
           prevEpisode: _prevEpisode,
         );
 
-    // Start 75% timer using runtime from API
     _startFinishTimer(details);
   }
 
@@ -113,8 +108,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     if (widget.type == 'movie') {
       runtimeMinutes = details['runtime'] as int?;
     }
-    // For TV, runtime comes from episode data — handled in PlayerEpisodesList
-    // Fall back to 20 mins for TV if no episode runtime available
     runtimeMinutes ??= (widget.type == 'tv' ? 20 : null);
 
     if (runtimeMinutes == null || runtimeMinutes <= 0) return;
@@ -144,17 +137,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
           episode: widget.episode,
         );
     setState(() {});
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Marked as finished ✓',
-            style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF1A1C23),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
   }
 
   @override
@@ -179,165 +161,329 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
             false);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1014),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top Bar
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white),
-                  onPressed: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go('/');
-                    }
-                  },
-                ),
-                Expanded(
-                  child: detailsAsync.when(
-                    data: (details) => Text(
-                      widget.type == 'tv'
-                          ? '${details['name'] ?? 'Playing'} · S${widget.season}E${widget.episode}'
-                          : details['title'] ?? 'Playing',
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    loading: () => const SizedBox(),
-                    error: (_, __) => const SizedBox(),
-                  ),
-                ),
-                // Mark as Finished button
-                detailsAsync.maybeWhen(
-                  data: (details) => TextButton.icon(
-                    onPressed: isCurrentFinished ? null : _manualMarkFinished,
-                    icon: Icon(
-                      isCurrentFinished
-                          ? Icons.check_circle
-                          : Icons.check_circle_outline,
-                      color: isCurrentFinished
-                          ? Colors.greenAccent
-                          : Colors.white54,
-                      size: 18,
-                    ),
-                    label: Text(
-                      isCurrentFinished ? 'Watched' : 'Mark Done',
-                      style: TextStyle(
-                        color: isCurrentFinished
-                            ? Colors.greenAccent
-                            : Colors.white54,
-                        fontSize: 12,
+      backgroundColor: Colors.black,
+      body: detailsAsync.when(
+        data: (details) {
+          final String? backdrop = details['backdrop_path'];
+
+          return Stack(
+            children: [
+              // 1. Immersive Blurred Backdrop
+              if (backdrop != null)
+                Positioned.fill(
+                  child: ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+                    child: Opacity(
+                      opacity: 0.35,
+                      child: TmdbImage(
+                        path: backdrop,
+                        highResSize: 'w780',
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                  orElse: () => const SizedBox(),
                 ),
-                // Next Episode button (TV only)
-                if (widget.type == 'tv')
-                  detailsAsync.maybeWhen(
-                    data: (details) {
-                      final seasons = details['seasons'] as List<dynamic>? ?? [];
-                      final currentSeasonData = seasons.firstWhere(
-                        (s) => s['season_number'] == widget.season,
-                        orElse: () => null,
-                      );
-                      final totalEpisodes =
-                          currentSeasonData?['episode_count'] as int? ?? 0;
-                      final hasNext = widget.episode < totalEpisodes;
-                      if (!hasNext) return const SizedBox();
-                      return IconButton(
-                        tooltip: 'Next Episode',
-                        icon: const Icon(Icons.skip_next_rounded,
-                            color: Colors.white, size: 26),
-                        onPressed: () {
-                          context.pushReplacement(
-                            '/player/tv/${widget.id}?season=${widget.season}&episode=${widget.episode + 1}',
-                          );
-                        },
-                      );
-                    },
-                    orElse: () => const SizedBox(),
+              
+              // 2. Dark Gradient Vignette
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.2),
+                        Colors.black.withValues(alpha: 0.6),
+                        Colors.black,
+                      ],
+                      stops: const [0.0, 0.4, 1.0],
+                    ),
                   ),
-              ],
-            ),
+                ),
+              ),
 
-            // Player with play gate
-            detailsAsync.when(
-              data: (details) => VideoPlayerView(
-                serverUrl: currentServerUrl,
-                thumbnailPath: details['backdrop_path'] as String? ??
-                    details['poster_path'] as String?,
-                onPlayPressed: () => _onPlayPressed(details),
-                allServers: servers,
-                currentServerIndex: _selectedServerIndex,
-                onServerSwitch: (index) {
-                  setState(() => _selectedServerIndex = index);
-                },
-              ),
-              loading: () => const AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Center(
-                    child:
-                        CircularProgressIndicator(color: Colors.blueAccent)),
-              ),
-              error: (_, __) => const AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Center(
-                    child: Text('Error', style: TextStyle(color: Colors.grey))),
-              ),
-            ),
-
-            // Scrollable content below player
-            Expanded(
-              child: SingleChildScrollView(
+              // 3. Main Content
+              SafeArea(
+                bottom: false,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 16),
+                    // Glassmorphic Top Bar
+                    _PlayerTopBar(
+                      title: widget.type == 'tv'
+                          ? '${details['name'] ?? 'Playing'} · S${widget.season}E${widget.episode}'
+                          : details['title'] ?? 'Playing',
+                      isFinished: isCurrentFinished,
+                      type: widget.type,
+                      details: details,
+                      episode: widget.episode,
+                      season: widget.season,
+                      id: widget.id,
+                      onMarkFinished: _manualMarkFinished,
+                    ),
 
-                    // Servers
-                    PlayerServersList(
-                      servers: servers,
-                      selectedIndex: _selectedServerIndex,
-                      onSelected: (index) {
+                    // Video Player
+                    VideoPlayerView(
+                      serverUrl: currentServerUrl,
+                      thumbnailPath: details['backdrop_path'] as String? ??
+                          details['poster_path'] as String?,
+                      onPlayPressed: () => _onPlayPressed(details),
+                      allServers: servers,
+                      currentServerIndex: _selectedServerIndex,
+                      onServerSwitch: (index) {
                         setState(() => _selectedServerIndex = index);
                       },
                     ),
 
-                    const SizedBox(height: 24),
+                    // Content Below Player
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 24),
 
-                    // TV Episodes
-                    if (widget.type == 'tv') ...[
-                      PlayerEpisodesList(
-                        id: widget.id,
-                        season: widget.season,
-                        currentEpisode: widget.episode,
-                        scrollController: _episodesScrollController,
+                            // Servers Section
+                            PlayerServersList(
+                              servers: servers,
+                              selectedIndex: _selectedServerIndex,
+                              onSelected: (index) {
+                                setState(() => _selectedServerIndex = index);
+                              },
+                            ),
+
+                            const SizedBox(height: 32),
+
+                            // TV Episodes
+                            if (widget.type == 'tv') ...[
+                              PlayerEpisodesList(
+                                id: widget.id,
+                                season: widget.season,
+                                currentEpisode: widget.episode,
+                                scrollController: _episodesScrollController,
+                              ),
+                              const SizedBox(height: 32),
+                            ],
+
+                            // About Section
+                            PlayerAboutSection(details: details),
+                            const SizedBox(height: 48),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 24),
-                    ],
-
-                    // About
-                    detailsAsync.when(
-                      data: (details) =>
-                          PlayerAboutSection(details: details),
-                      loading: () => const SizedBox(),
-                      error: (_, __) => const SizedBox(),
                     ),
-                    const SizedBox(height: 32),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          );
+        },
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: Colors.blueAccent),
+        ),
+        error: (e, s) => Center(
+          child: Text('Error loading player', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
         ),
       ),
+    );
+  }
+}
+
+class _PlayerTopBar extends StatelessWidget {
+  final String title;
+  final bool isFinished;
+  final String type;
+  final Map<String, dynamic> details;
+  final int episode;
+  final int season;
+  final int id;
+  final VoidCallback onMarkFinished;
+
+  const _PlayerTopBar({
+    required this.title,
+    required this.isFinished,
+    required this.type,
+    required this.details,
+    required this.episode,
+    required this.season,
+    required this.id,
+    required this.onMarkFinished,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          // Glass Back Button
+          _GlassButton(
+            icon: Icons.arrow_back_ios_new_rounded,
+            onTap: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
+          ),
+          const SizedBox(width: 16),
+          
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.2,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          
+          const SizedBox(width: 8),
+          
+          // Mark Done Button
+          _GlassActionChip(
+            icon: isFinished ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
+            label: isFinished ? 'Watched' : 'Mark Done',
+            color: isFinished ? Colors.greenAccent : Colors.white,
+            onTap: isFinished ? null : onMarkFinished,
+          ),
+
+          if (type == 'tv') ...[
+            const SizedBox(width: 8),
+            _NextEpisodeButton(
+              details: details,
+              currentSeason: season,
+              currentEpisode: episode,
+              id: id,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _GlassButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _GlassButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Material(
+          color: Colors.white.withValues(alpha: 0.08),
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: Colors.white, size: 18),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GlassActionChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _GlassActionChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Material(
+          color: Colors.white.withValues(alpha: 0.08),
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(icon, color: color, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NextEpisodeButton extends StatelessWidget {
+  final Map<String, dynamic> details;
+  final int currentSeason;
+  final int currentEpisode;
+  final int id;
+
+  const _NextEpisodeButton({
+    required this.details,
+    required this.currentSeason,
+    required this.currentEpisode,
+    required this.id,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final seasons = details['seasons'] as List<dynamic>? ?? [];
+    final currentSeasonData = seasons.firstWhere(
+      (s) => s['season_number'] == currentSeason,
+      orElse: () => null,
+    );
+    final totalEpisodes = currentSeasonData?['episode_count'] as int? ?? 0;
+    final hasNext = currentEpisode < totalEpisodes;
+
+    if (!hasNext) return const SizedBox();
+
+    return _GlassButton(
+      icon: Icons.skip_next_rounded,
+      onTap: () {
+        context.pushReplacement(
+          '/player/tv/$id?season=$currentSeason&episode=${currentEpisode + 1}',
+        );
+      },
     );
   }
 }

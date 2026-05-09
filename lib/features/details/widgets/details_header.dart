@@ -133,10 +133,10 @@ class DetailsHeader extends StatelessWidget {
                       colors: [
                         Colors.transparent,
                         Colors.black.withValues(alpha: 0.0),
-                        Colors.black.withValues(alpha: 0.2),
-                        Colors.black.withValues(alpha: 0.5),
+                        Colors.black.withValues(alpha: 0.1),
+                        Colors.black.withValues(alpha: 0.3),
+                        Colors.black.withValues(alpha: 0.6),
                         Colors.black.withValues(alpha: 0.8),
-                        Colors.black.withValues(alpha: 1.0),
                       ],
                       stops: const [0.0, 0.4, 0.6, 0.8, 0.95, 1.0],
                     ),

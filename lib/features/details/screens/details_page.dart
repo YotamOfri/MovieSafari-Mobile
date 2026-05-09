@@ -85,14 +85,34 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
                     type: widget.type,
                     details: details,
                   ),
+                  
+                  // 4. Smooth Transition Bridge
                   SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        DetailsInfo(
-                          details: details,
-                          type: widget.type,
+                    child: Container(
+                      height: 80,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.7),
+                            Colors.black.withValues(alpha: 0.0),
+                          ],
                         ),
+                      ),
+                    ),
+                  ),
+
+                  SliverToBoxAdapter(
+                    child: Transform.translate(
+                      offset: const Offset(0, -60),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          DetailsInfo(
+                            details: details,
+                            type: widget.type,
+                          ),
 
                         if (widget.type == 'tv' && seasons.isNotEmpty) ...[
                           const SizedBox(height: 24),
@@ -145,8 +165,9 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
             ],
           );
         },
