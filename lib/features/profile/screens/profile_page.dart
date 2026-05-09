@@ -24,7 +24,7 @@ class ProfilePage extends ConsumerWidget {
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // Premium App Bar with Profile Info
+          // Premium Glassmorphic Header
           SliverAppBar(
             expandedHeight: 280,
             collapsedHeight: 80,
@@ -36,24 +36,26 @@ class ProfilePage extends ConsumerWidget {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Cinematic Poster Banner Background
+                  // Cinematic Backdrop
                   Image.asset(
                     'assets/PosterBanner.png',
                     fit: BoxFit.cover,
                   ),
-                  // Blur + Darkening Overlay
-                  BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            const Color(0xFF0F1014).withValues(alpha: 0.4),
-                            const Color(0xFF0F1014).withValues(alpha: 0.8),
-                            const Color(0xFF0F1014),
-                          ],
+                  // Deep Glass Blur Overlay
+                  Positioned.fill(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              const Color(0xFF0F1014).withValues(alpha: 0.3),
+                              const Color(0xFF0F1014).withValues(alpha: 0.7),
+                              const Color(0xFF0F1014),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -63,27 +65,33 @@ class ProfilePage extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 40),
-                      // Avatar with Glow
+                      // Avatar with Halo Glow
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3), width: 2),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.blueAccent.withValues(alpha: 0.2),
-                              blurRadius: 30,
-                              spreadRadius: 5,
+                              blurRadius: 40,
+                              spreadRadius: 2,
                             ),
                           ],
                         ),
-                        child: const CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Color(0xFF1A1C23),
-                          child: HugeIcon(
-                            icon: HugeIcons.strokeRoundedUserCircle,
-                            color: Colors.white,
-                            size: 40,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(50),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.white.withValues(alpha: 0.1),
+                              child: const HugeIcon(
+                                icon: HugeIcons.strokeRoundedUserCircle,
+                                color: Colors.white,
+                                size: 40,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -92,25 +100,32 @@ class ProfilePage extends ConsumerWidget {
                         'Movie Explorer',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 24,
+                          fontSize: 26,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.blueAccent.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'PREMIUM MEMBER',
-                          style: TextStyle(
-                            color: Colors.blueAccent.withValues(alpha: 0.8),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.5,
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.blueAccent.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.2), width: 1),
+                            ),
+                            child: const Text(
+                              'PREMIUM MEMBER',
+                              style: TextStyle(
+                                color: Colors.blueAccent,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -129,7 +144,7 @@ class ProfilePage extends ConsumerWidget {
                 children: [
                   const SizedBox(height: 24),
                   
-                  // Statistics Grid
+                  // Glassmorphic Statistics
                   Row(
                     children: [
                       _CompactStatTile(
@@ -148,7 +163,7 @@ class ProfilePage extends ConsumerWidget {
                     ],
                   ),
                   
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 40),
                   
                   // Watch History Section
                   _ModernSectionHeader(
@@ -156,10 +171,10 @@ class ProfilePage extends ConsumerWidget {
                     trailing: history.isNotEmpty ? 'View All' : null,
                     onTrailingTap: () => context.push('/history'),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   _buildHistoryList(history, context, ref),
                   
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 40),
                   
                   // Quick Actions
                   const _ModernSectionHeader(title: 'Quick Actions'),
@@ -198,7 +213,7 @@ class ProfilePage extends ConsumerWidget {
                     onTap: () {},
                   ),
                   
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 120),
                 ],
               ),
             ),
@@ -210,43 +225,49 @@ class ProfilePage extends ConsumerWidget {
 
   Widget _buildHistoryList(List<dynamic> history, BuildContext context, WidgetRef ref) {
     if (history.isEmpty) {
-      return Container(
-        height: 120,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            HugeIcon(
-              icon: HugeIcons.strokeRoundedPlay,
-              color: Colors.white.withValues(alpha: 0.1),
-              size: 32,
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            height: 140,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'No history yet',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 14),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedPlay,
+                  color: Colors.white.withValues(alpha: 0.1),
+                  size: 32,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'No history yet',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       );
     }
 
     return SizedBox(
-      height: 200,
+      height: 210,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: history.length,
         clipBehavior: Clip.none,
         itemBuilder: (context, index) {
           final entry = history[index];
-          final subtitle = entry.mediaType == 'tv' 
+          final String subtitle = entry.mediaType == 'tv' 
               ? 'S${entry.lastSeason} E${entry.lastEpisode}' 
-              : 'Movie';
+              : 'MOVIE';
 
           return Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -262,16 +283,16 @@ class ProfilePage extends ConsumerWidget {
                 MediaContextMenu.show(context, ref, entry.toJson(), entry.mediaType);
               },
               child: SizedBox(
-                width: 140,
+                width: 145,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(20),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
                       // 1. Background Image
                       TmdbImage(path: entry.posterPath, highResSize: 'w400'),
                       
-                      // 2. Gradient Overlay for text readability
+                      // 2. Modern Multi-stage Gradient
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
@@ -280,7 +301,7 @@ class ProfilePage extends ConsumerWidget {
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                Colors.black.withValues(alpha: 0.1),
+                                Colors.black.withValues(alpha: 0.2),
                                 Colors.black.withValues(alpha: 0.8),
                                 Colors.black,
                               ],
@@ -290,7 +311,7 @@ class ProfilePage extends ConsumerWidget {
                         ),
                       ),
                       
-                      // 3. Content Overlaid
+                      // 3. Content
                       Padding(
                         padding: const EdgeInsets.all(12),
                         child: Column(
@@ -308,21 +329,27 @@ class ProfilePage extends ConsumerWidget {
                                 height: 1.1,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.blueAccent.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3), width: 0.5),
-                              ),
-                              child: Text(
-                                subtitle,
-                                style: const TextStyle(
-                                  color: Colors.blueAccent,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.5,
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blueAccent.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3), width: 0.8),
+                                  ),
+                                  child: Text(
+                                    subtitle,
+                                    style: const TextStyle(
+                                      color: Colors.blueAccent,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -330,24 +357,25 @@ class ProfilePage extends ConsumerWidget {
                         ),
                       ),
                       
-                      // 4. Completed Indicator (if applicable)
+                      // 4. Watched Pill (Glassmorphic)
                       if (entry.isFinished)
                         Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.greenAccent.withValues(alpha: 0.9),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  blurRadius: 4,
+                          top: 10,
+                          right: 10,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: Container(
+                                padding: const EdgeInsets.all(5),
+                                decoration: BoxDecoration(
+                                  color: Colors.greenAccent.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.4), width: 1),
                                 ),
-                              ],
+                                child: const Icon(Icons.check_rounded, color: Colors.greenAccent, size: 10),
+                              ),
                             ),
-                            child: const Icon(Icons.check, color: Colors.black, size: 10),
                           ),
                         ),
                     ],
@@ -378,37 +406,49 @@ class _CompactStatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: HugeIcon(icon: icon, color: color, size: 20),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: color.withValues(alpha: 0.1), width: 1.5),
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  value,
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: HugeIcon(icon: icon, color: color, size: 20),
                 ),
-                Text(
-                  label,
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 11),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      value,
+                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
+                    ),
+                    Text(
+                      label.toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.4),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -429,14 +469,24 @@ class _ModernSectionHeader extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.2,
+          ),
         ),
         if (trailing != null)
           GestureDetector(
             onTap: onTrailingTap,
             child: Text(
-              trailing!,
-              style: const TextStyle(color: Colors.blueAccent, fontSize: 12, fontWeight: FontWeight.bold),
+              trailing!.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.blueAccent,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
       ],
@@ -465,49 +515,64 @@ class _ActionTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: PressableCard(
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: (isDestructive ? Colors.redAccent : Colors.blueAccent).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: HugeIcon(
-                  icon: icon,
-                  color: isDestructive ? Colors.redAccent : Colors.white70,
-                  size: 22,
-                ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: isDestructive ? Colors.redAccent : Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: (isDestructive ? Colors.redAccent : Colors.white).withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: (isDestructive ? Colors.redAccent : Colors.white).withValues(alpha: 0.1),
+                        width: 1,
                       ),
                     ),
-                    if (subtitle != null)
-                      Text(
-                        subtitle!,
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 12),
-                      ),
-                  ],
-                ),
+                    child: HugeIcon(
+                      icon: icon,
+                      color: isDestructive ? Colors.redAccent : Colors.white,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            color: isDestructive ? Colors.redAccent : Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        if (subtitle != null)
+                          Text(
+                            subtitle!,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.4),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: Colors.white.withValues(alpha: 0.2), size: 22),
+                ],
               ),
-              Icon(Icons.chevron_right, color: Colors.white.withValues(alpha: 0.2), size: 20),
-            ],
+            ),
           ),
         ),
       ),

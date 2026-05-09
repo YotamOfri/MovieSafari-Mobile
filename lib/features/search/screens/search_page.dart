@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -61,125 +62,142 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final searchHistory = ref.watch(searchHistoryProvider);
     final trendingAllAsync = ref.watch(trendingAllProvider);
 
-    return SafeArea(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
-              ),
-              child: TextField(
-                controller: _controller,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Movies, TV shows or genres...',
-                  hintStyle:
-                      TextStyle(color: Colors.white.withOpacity(0.4)),
-                  prefixIcon: const UnconstrainedBox(
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedSearch01,
-                      color: Colors.grey,
-                      size: 20,
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F1014),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Glassmorphic Search Bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    ),
+                    child: TextField(
+                      controller: _controller,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                      decoration: InputDecoration(
+                        hintText: 'Movies, TV shows or genres...',
+                        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontWeight: FontWeight.w500),
+                        prefixIcon: const UnconstrainedBox(
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedSearch01,
+                            color: Colors.white60,
+                            size: 20,
+                          ),
+                        ),
+                        suffixIcon: searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, color: Colors.white60, size: 20),
+                                onPressed: _clearSearch,
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      onChanged: (value) {
+                        if (_debounce?.isActive ?? false) _debounce!.cancel();
+                        _debounce = Timer(const Duration(milliseconds: 600), () {
+                          _submitSearch(value);
+                        });
+                      },
+                      onSubmitted: _submitSearch,
                     ),
                   ),
-                  suffixIcon: searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear,
-                              color: Colors.white60, size: 20),
-                          onPressed: _clearSearch,
-                        )
-                      : null,
-                  border: InputBorder.none,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 16),
                 ),
-                onChanged: (value) {
-                  if (_debounce?.isActive ?? false) _debounce!.cancel();
-                  _debounce =
-                      Timer(const Duration(milliseconds: 600), () {
-                    _submitSearch(value);
-                  });
-                },
-                onSubmitted: _submitSearch,
               ),
             ),
-          ),
 
-          // Results / Empty State
-          Expanded(
-            child: searchQuery.trim().isEmpty
-                ? _buildEmptyState(searchHistory, trendingAllAsync)
-                : searchResultsAsync.when(
-                    data: (results) {
-                      if (results.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const HugeIcon(
-                                icon: HugeIcons.strokeRoundedSearch01,
-                                size: 48,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No results for "$searchQuery"',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.5),
-                                  fontSize: 16,
+            // Results / Empty State
+            Expanded(
+              child: searchQuery.trim().isEmpty
+                  ? _buildEmptyState(searchHistory, trendingAllAsync)
+                  : searchResultsAsync.when(
+                      data: (results) {
+                        if (results.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const HugeIcon(
+                                  icon: HugeIcons.strokeRoundedSearch01,
+                                  size: 48,
+                                  color: Colors.white24,
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                      return _buildResultsGrid(results);
-                    },
-                    loading: () => const SkeletonGrid(),
-                    error: (e, s) =>
-                        Center(child: Text('Error: $e', style: const TextStyle(color: Colors.redAccent))),
-                  ),
-          ),
-        ],
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No results for "$searchQuery"',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.4),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return _buildResultsGrid(results);
+                      },
+                      loading: () => const SkeletonGrid(),
+                      error: (e, s) => Center(
+                        child: Text('Error: $e', style: const TextStyle(color: Colors.redAccent)),
+                      ),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildEmptyState(List<String> history, AsyncValue<List<dynamic>> trendingAll) {
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (history.isNotEmpty) ...[
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Recent Searches',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white)),
+                  const Text(
+                    'Recent Searches',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
                   TextButton(
-                    onPressed: () =>
-                        ref.read(searchHistoryProvider.notifier).clearAll(),
-                    child: const Text('Clear all',
-                        style: TextStyle(color: Colors.grey, fontSize: 13)),
+                    onPressed: () => ref.read(searchHistoryProvider.notifier).clearAll(),
+                    child: Text(
+                      'Clear all',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.4),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 4),
             SizedBox(
-              height: 40,
+              height: 44,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -187,27 +205,35 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 itemBuilder: (context, index) {
                   final query = history[index];
                   return Padding(
-                    padding: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.only(right: 10),
                     child: GestureDetector(
                       onTap: () => _applyHistoryQuery(query),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.07),
-                          borderRadius: BorderRadius.circular(20),
-                          border:
-                              Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.history,
-                                color: Colors.grey, size: 14),
-                            const SizedBox(width: 8),
-                            Text(query,
-                                style: const TextStyle(
-                                    color: Colors.white70, fontSize: 13)),
-                          ],
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.history_rounded, color: Colors.white.withValues(alpha: 0.4), size: 16),
+                                const SizedBox(width: 8),
+                                Text(
+                                  query,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -215,21 +241,25 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 },
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
           ],
 
           // Categories Section
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text('Categories',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white)),
+            child: Text(
+              'Categories',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: 0.2,
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 90,
+            height: 100,
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -267,7 +297,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               ],
             ),
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 48),
 
           // Trending Now Section
           const Padding(
@@ -277,14 +307,18 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 HugeIcon(
                   icon: HugeIcons.strokeRoundedFire,
                   color: Colors.deepOrangeAccent,
-                  size: 18,
+                  size: 20,
                 ),
                 SizedBox(width: 8),
-                Text('Trending Now',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white)),
+                Text(
+                  'Trending Now',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 0.2,
+                  ),
+                ),
               ],
             ),
           ),
@@ -297,8 +331,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             loading: () => const SkeletonList(height: 195),
             error: (e, s) => const SizedBox.shrink(),
           ),
-          
-          const SizedBox(height: 32),
+
+          const SizedBox(height: 40),
           // Discover More (Popular Series)
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
@@ -307,14 +341,18 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 HugeIcon(
                   icon: HugeIcons.strokeRoundedTv01,
                   color: Colors.blueAccent,
-                  size: 18,
+                  size: 20,
                 ),
                 SizedBox(width: 8),
-                Text('Popular Series',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white)),
+                Text(
+                  'Popular Series',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 0.2,
+                  ),
+                ),
               ],
             ),
           ),
@@ -327,6 +365,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             loading: () => const SkeletonList(height: 195),
             error: (e, s) => const SizedBox.shrink(),
           ),
+          const SizedBox(height: 100), // Account for floating navbar
         ],
       ),
     );
@@ -336,10 +375,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final history = ref.watch(watchHistoryProvider);
 
     return GridView.builder(
-      padding: const EdgeInsets.only(top: 8, bottom: 24),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+      physics: const BouncingScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 2 / 3,
+        childAspectRatio: 0.65,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
@@ -351,15 +391,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         final String mediaType = item['media_type'] ?? 'tv';
         final int id = item['id'];
         final displayType = mediaType == 'movie' ? 'Movie' : 'Series';
-        final icon = mediaType == 'movie'
-            ? HugeIcons.strokeRoundedPlayCircle
-            : HugeIcons.strokeRoundedStar;
-        final Color badgeColor =
-            mediaType == 'movie' ? Colors.purpleAccent : Colors.blueAccent;
+        final icon = mediaType == 'movie' ? HugeIcons.strokeRoundedPlayCircle : HugeIcons.strokeRoundedTv01;
+        final Color accentColor = mediaType == 'movie' ? Colors.purpleAccent : Colors.blueAccent;
 
-        final entry = history.cast<WatchedEntry?>().firstWhere(
-            (e) => e?.id == id && e?.mediaType == mediaType,
-            orElse: () => null);
+        final entry = history.cast<WatchedEntry?>().firstWhere((e) => e?.id == id && e?.mediaType == mediaType, orElse: () => null);
         final bool isFinished = entry?.isFinished ?? false;
 
         return PressableCard(
@@ -369,55 +404,50 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             MediaContextMenu.show(context, ref, item, mediaType);
           },
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             child: Stack(
               fit: StackFit.expand,
               children: [
-                TmdbImage(path: posterPath, highResSize: 'w400'),
+                TmdbImage(path: posterPath, highResSize: 'w500'),
 
-                // Watched badge (top-right)
+                // Watched badge (Glassmorphic)
                 if (isFinished)
                   Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.greenAccent.withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.check, color: Colors.black, size: 10),
-                          SizedBox(width: 3),
-                          Text('Watched',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                              )),
-                        ],
-                      ),
-                    ),
-                  )
-                else if (entry != null)
-                  // In-progress blue dot
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: Colors.blueAccent,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.5),
+                    top: 10,
+                    right: 10,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.greenAccent.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.4), width: 1),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.check_rounded, color: Colors.greenAccent, size: 12),
+                              SizedBox(width: 4),
+                              Text(
+                                'WATCHED',
+                                style: TextStyle(
+                                  color: Colors.greenAccent,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
 
+                // Content Overlay
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -430,35 +460,41 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withValues(alpha: 0.7),
+                          Colors.black.withValues(alpha: 0.8),
                           Colors.black,
                         ],
+                        stops: const [0.0, 0.5, 1.0],
                       ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(title,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              height: 1.2,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis),
-                        const SizedBox(height: 6),
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
-                            HugeIcon(icon: icon, size: 14, color: badgeColor),
-                            const SizedBox(width: 4),
-                            Text(displayType,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: badgeColor,
-                                )),
+                            HugeIcon(icon: icon, size: 14, color: accentColor),
+                            const SizedBox(width: 6),
+                            Text(
+                              displayType.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                color: accentColor,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -476,7 +512,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
 class _CategoryCard extends StatelessWidget {
   final String label;
-  final List<List<dynamic>> icon;
+  final dynamic icon;
   final Color color;
   final VoidCallback onTap;
 
@@ -491,34 +527,43 @@ class _CategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 12),
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.mediumImpact();
-          onTap();
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: 100,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.2)),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              HugeIcon(icon: icon, color: color, size: 28),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                onTap();
+              },
+              child: Container(
+                width: 110,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    HugeIcon(icon: icon, color: color, size: 32),
+                    const SizedBox(height: 10),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
