@@ -1,7 +1,9 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/api_provider.dart';
 import '../../../widgets/skeleton_loader.dart';
+import '../../../widgets/tmdb_image.dart';
 import '../../home/widgets/horizontal_media_list.dart';
 import '../widgets/details_header.dart';
 import '../widgets/details_info.dart';
@@ -36,73 +38,114 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
       body: detailsAsync.when(
         data: (details) {
           final List<dynamic> seasons = details['seasons'] ?? [];
+          final String? backdrop = details['backdrop_path'];
 
-          return CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              DetailsHeader(
-                id: widget.id,
-                type: widget.type,
-                details: details,
-              ),
-              SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DetailsInfo(
-                      details: details,
-                      type: widget.type,
-                    ),
-
-                    if (widget.type == 'tv' && seasons.isNotEmpty) ...[
-                      const SizedBox(height: 24),
-                      EpisodeSelector(
-                        id: widget.id,
-                        selectedSeason: _selectedSeason,
-                        seasons: seasons,
-                        onSeasonChanged: (season) {
-                          setState(() => _selectedSeason = season);
-                        },
-                      ),
-                    ],
-
-                    const SizedBox(height: 32),
-                    CastList(id: widget.id, type: widget.type),
-                    const SizedBox(height: 32),
-
-                    // Suggestions Section
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        'Suggestions',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+          return Stack(
+            children: [
+              // 1. Dynamic Blurred Background
+              if (backdrop != null)
+                Positioned.fill(
+                  child: ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+                    child: Opacity(
+                      opacity: 0.4,
+                      child: TmdbImage(
+                        path: backdrop,
+                        highResSize: 'w780',
+                        fit: BoxFit.cover,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    recommendationsAsync.when(
-                      data: (recommendations) {
-                        if (recommendations.isEmpty) return const SizedBox.shrink();
-                        final List<dynamic> mappedRecs = recommendations.map((item) {
-                          final Map<String, dynamic> itemMap = Map<String, dynamic>.from(item);
-                          if (!itemMap.containsKey('media_type')) itemMap['media_type'] = widget.type;
-                          return itemMap;
-                        }).toList();
-
-                        return SizedBox(
-                          height: 200,
-                          child: HorizontalMediaList(items: mappedRecs),
-                        );
-                      },
-                      loading: () => const SkeletonList(height: 200),
-                      error: (e, s) => const SizedBox.shrink(),
-                    ),
-                    const SizedBox(height: 48),
-                  ],
+                  ),
                 ),
+              
+              // 2. Dark Overlay for Contrast
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFF0F1014).withValues(alpha: 0.3),
+                        const Color(0xFF0F1014).withValues(alpha: 0.8),
+                        const Color(0xFF0F1014),
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+
+              // 3. Main Content
+              CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  DetailsHeader(
+                    id: widget.id,
+                    type: widget.type,
+                    details: details,
+                  ),
+                  SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DetailsInfo(
+                          details: details,
+                          type: widget.type,
+                        ),
+
+                        if (widget.type == 'tv' && seasons.isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          EpisodeSelector(
+                            id: widget.id,
+                            selectedSeason: _selectedSeason,
+                            seasons: seasons,
+                            onSeasonChanged: (season) {
+                              setState(() => _selectedSeason = season);
+                            },
+                          ),
+                        ],
+
+                        const SizedBox(height: 32),
+                        CastList(id: widget.id, type: widget.type),
+                        const SizedBox(height: 32),
+
+                        // Suggestions Section
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Text(
+                            'Suggestions',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        recommendationsAsync.when(
+                          data: (recommendations) {
+                            if (recommendations.isEmpty) return const SizedBox.shrink();
+                            final List<dynamic> mappedRecs = recommendations.map((item) {
+                              final Map<String, dynamic> itemMap = Map<String, dynamic>.from(item);
+                              if (!itemMap.containsKey('media_type')) itemMap['media_type'] = widget.type;
+                              return itemMap;
+                            }).toList();
+
+                            return SizedBox(
+                              height: 200,
+                              child: HorizontalMediaList(items: mappedRecs),
+                            );
+                          },
+                          loading: () => const SkeletonList(height: 200),
+                          error: (e, s) => const SizedBox.shrink(),
+                        ),
+                        const SizedBox(height: 48),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           );

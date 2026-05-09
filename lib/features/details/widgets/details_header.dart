@@ -124,6 +124,7 @@ class DetailsHeader extends StatelessWidget {
                     ),
                   ),
 
+                // Enhanced Smooth Gradient Overlay
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -131,11 +132,13 @@ class DetailsHeader extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.transparent,
-                        const Color(0xFF0F1014).withValues(alpha: 0.8),
+                        const Color(0xFF0F1014).withValues(alpha: 0.0),
+                        const Color(0xFF0F1014).withValues(alpha: 0.3),
+                        const Color(0xFF0F1014).withValues(alpha: 0.7),
+                        const Color(0xFF0F1014).withValues(alpha: 0.9),
                         const Color(0xFF0F1014),
                       ],
-                      stops: const [0.0, 0.4, 0.8, 1.0],
+                      stops: const [0.0, 0.5, 0.7, 0.85, 0.95, 1.0],
                     ),
                   ),
                 ),
