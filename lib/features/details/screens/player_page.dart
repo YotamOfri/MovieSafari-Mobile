@@ -174,7 +174,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   child: ImageFiltered(
                     imageFilter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
                     child: Opacity(
-                      opacity: 0.35,
+                      opacity: 0.4,
                       child: TmdbImage(
                         path: backdrop,
                         highResSize: 'w780',
@@ -184,7 +184,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   ),
                 ),
               
-              // 2. Dark Gradient Vignette
+              // 2. Cinematic Shadow Dissolve (Matched to Details Page)
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -192,11 +192,14 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.2),
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.0),
+                        Colors.black.withValues(alpha: 0.1),
+                        Colors.black.withValues(alpha: 0.3),
                         Colors.black.withValues(alpha: 0.6),
                         Colors.black,
                       ],
-                      stops: const [0.0, 0.4, 1.0],
+                      stops: const [0.0, 0.4, 0.6, 0.8, 0.95, 1.0],
                     ),
                   ),
                 ),
