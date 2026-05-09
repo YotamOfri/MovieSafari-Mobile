@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../widgets/tmdb_image.dart';
@@ -102,10 +101,14 @@ class _HomeHeroCarouselState extends State<HomeHeroCarousel> with SingleTickerPr
               itemCount: realCount * _infiniteFactor,
               itemBuilder: (context, index) {
                 final item = widget.items[index % realCount];
-                return _HeroItem(
-                  item: item,
-                  index: index,
-                  pageOffset: _pageOffset,
+                // RepaintBoundary ensures that the progress-bar AnimationController
+                // (which ticks at 60 fps) does NOT cause off-screen hero pages to repaint.
+                return RepaintBoundary(
+                  child: _HeroItem(
+                    item: item,
+                    index: index,
+                    pageOffset: _pageOffset,
+                  ),
                 );
               },
             ),
@@ -201,46 +204,61 @@ class _HeroItem extends StatelessWidget {
         .cast<String>()
         .toList();
 
+    // The gradient overlay is static — it never changes while scrolling.
+    // By placing it (together with the TmdbImage) in the ValueListenableBuilder's
+    // `child` param, Flutter builds it ONCE and re-uses the cached subtree on every
+    // scroll tick. Only the parallax Transform offset and the text/opacity values
+    // are recomputed each tick.
+    final Widget staticBackground = Stack(
+      fit: StackFit.expand,
+      children: [
+        TmdbImage(
+          path: backdropPath,
+          highResSize: 'w1280',
+          height: 600,
+          width: double.infinity,
+        ),
+        // Static gradient overlay — built once, never redrawn during scroll.
+        Container(
+          height: 600,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                const Color(0xFF0F1014).withValues(alpha: 0.1),
+                const Color(0xFF0F1014).withValues(alpha: 0.6),
+                const Color(0xFF0F1014).withValues(alpha: 0.9),
+                const Color(0xFF0F1014),
+              ],
+              stops: const [0.0, 0.5, 0.8, 0.95, 1.0],
+            ),
+          ),
+        ),
+      ],
+    );
+
     return ValueListenableBuilder<double>(
       valueListenable: pageOffset,
-      builder: (context, offset, child) {
+      // `child` is built once and injected into `builder` without rebuilding.
+      child: staticBackground,
+      builder: (context, offset, staticChild) {
         final double value = index.toDouble() - offset;
         final double opacity = (1 - (value.abs() * 0.8)).clamp(0.0, 1.0);
         final double slideOffset = value * 100;
 
         return Stack(
           children: [
-            // Background Image (Parallax)
+            // Parallax: only the Transform offset changes — the child subtree
+            // (TmdbImage + gradient) is the cached `staticChild`, not rebuilt.
             Transform.translate(
               offset: Offset(value * 150, 0),
-              child: TmdbImage(
-                path: backdropPath,
-                highResSize: 'w1280',
-                height: 600,
-                width: double.infinity,
-              ),
+              child: staticChild,
             ),
-            // Gradient Overlay
-            Container(
-              height: 600,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    const Color(0xFF0F1014).withValues(alpha: 0.1),
-                    const Color(0xFF0F1014).withValues(alpha: 0.6),
-                    const Color(0xFF0F1014).withValues(alpha: 0.9),
-                    const Color(0xFF0F1014),
-                  ],
-                  stops: const [0.0, 0.5, 0.8, 0.95, 1.0],
-                ),
-              ),
-            ),
-            
-            // Content
+
+            // Animated text/UI content — rebuilds only the cheap layout/text layer.
             Positioned(
               bottom: 70,
               left: 0,
@@ -269,7 +287,7 @@ class _HeroItem extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      
+
                       Transform.translate(
                         offset: Offset(slideOffset * 0.4, 0),
                         child: Row(
@@ -302,7 +320,7 @@ class _HeroItem extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
+
                       Transform.translate(
                         offset: Offset(slideOffset * 0.3, 0),
                         child: overview != null && overview.isNotEmpty
@@ -347,7 +365,7 @@ class _HeroItem extends StatelessWidget {
                               )
                             : const SizedBox.shrink(),
                       ),
-                      
+
                       Transform.translate(
                         offset: Offset(slideOffset * 0.1, 0),
                         child: Row(

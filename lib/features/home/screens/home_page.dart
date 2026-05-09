@@ -34,6 +34,9 @@ class HomePage extends ConsumerWidget {
       body: Stack(
         children: [
           // 1. Dynamic Blurred Backdrop
+          // RepaintBoundary caches this layer as a GPU texture so the
+          // 60-fps progress-bar AnimationController does NOT re-rasterize the
+          // expensive ImageFilter.blur every frame.
           heroAsync.when(
             data: (items) {
               if (items.isEmpty) return const SizedBox.shrink();
@@ -41,14 +44,16 @@ class HomePage extends ConsumerWidget {
               if (backdrop == null) return const SizedBox.shrink();
 
               return Positioned.fill(
-                child: ImageFiltered(
-                  imageFilter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+                child: RepaintBoundary(
                   child: Opacity(
                     opacity: 0.4,
-                    child: TmdbImage(
-                      path: backdrop,
-                      highResSize: 'w780',
-                      fit: BoxFit.cover,
+                    child: ImageFiltered(
+                      imageFilter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+                      child: TmdbImage(
+                        path: backdrop,
+                        highResSize: 'w780',
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
@@ -95,10 +100,14 @@ class HomePage extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ── 1. Hero Carousel ────────────────────────────────────
-                  heroAsync.when(
-                    data: (items) => HomeHeroCarousel(items: items),
-                    loading: () => const SkeletonLoader(width: double.infinity, height: 600),
-                    error: (e, s) => const SizedBox.shrink(),
+                  // RepaintBoundary isolates the carousel so scroll events in the
+                  // outer SingleChildScrollView don't cause it to repaint.
+                  RepaintBoundary(
+                    child: heroAsync.when(
+                      data: (items) => HomeHeroCarousel(items: items),
+                      loading: () => const SkeletonLoader(width: double.infinity, height: 600),
+                      error: (e, s) => const SizedBox.shrink(),
+                    ),
                   ),
 
               // ── 2. Continue Watching — personal content always first ─
@@ -162,13 +171,15 @@ class HomePage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                height: 195,
-                child: moviesAsync.when(
-                  data: (movies) =>
-                      HorizontalMediaList(items: movies, defaultType: 'movie'),
-                  loading: () => const SkeletonList(height: 195),
-                  error: (e, s) => _ErrorWidget(message: '$e'),
+              RepaintBoundary(
+                child: SizedBox(
+                  height: 195,
+                  child: moviesAsync.when(
+                    data: (movies) =>
+                        HorizontalMediaList(items: movies, defaultType: 'movie'),
+                    loading: () => const SkeletonList(height: 195),
+                    error: (e, s) => _ErrorWidget(message: '$e'),
+                  ),
                 ),
               ),
 
@@ -198,13 +209,15 @@ class HomePage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                height: 195,
-                child: seriesAsync.when(
-                  data: (series) =>
-                      HorizontalMediaList(items: series, defaultType: 'tv'),
-                  loading: () => const SkeletonList(height: 195),
-                  error: (e, s) => _ErrorWidget(message: '$e'),
+              RepaintBoundary(
+                child: SizedBox(
+                  height: 195,
+                  child: seriesAsync.when(
+                    data: (series) =>
+                        HorizontalMediaList(items: series, defaultType: 'tv'),
+                    loading: () => const SkeletonList(height: 195),
+                    error: (e, s) => _ErrorWidget(message: '$e'),
+                  ),
                 ),
               ),
 
@@ -219,13 +232,15 @@ class HomePage extends ConsumerWidget {
                 iconColor: Colors.amber,
               ),
               const SizedBox(height: 14),
-              SizedBox(
-                height: 230,
-                child: topRatedMoviesAsync.when(
-                  data: (movies) =>
-                      TopTenMediaList(items: movies, defaultType: 'movie'),
-                  loading: () => const SkeletonList(height: 230),
-                  error: (e, s) => _ErrorWidget(message: '$e'),
+              RepaintBoundary(
+                child: SizedBox(
+                  height: 230,
+                  child: topRatedMoviesAsync.when(
+                    data: (movies) =>
+                        TopTenMediaList(items: movies, defaultType: 'movie'),
+                    loading: () => const SkeletonList(height: 230),
+                    error: (e, s) => _ErrorWidget(message: '$e'),
+                  ),
                 ),
               ),
 
@@ -237,13 +252,15 @@ class HomePage extends ConsumerWidget {
                 iconColor: Colors.purpleAccent,
               ),
               const SizedBox(height: 14),
-              SizedBox(
-                height: 160,
-                child: upcomingMoviesAsync.when(
-                  data: (movies) =>
-                      BackdropMediaList(items: movies, defaultType: 'movie'),
-                  loading: () => const SkeletonLoader(width: double.infinity, height: 160),
-                  error: (e, s) => _ErrorWidget(message: '$e'),
+              RepaintBoundary(
+                child: SizedBox(
+                  height: 160,
+                  child: upcomingMoviesAsync.when(
+                    data: (movies) =>
+                        BackdropMediaList(items: movies, defaultType: 'movie'),
+                    loading: () => const SkeletonLoader(width: double.infinity, height: 160),
+                    error: (e, s) => _ErrorWidget(message: '$e'),
+                  ),
                 ),
               ),
 
@@ -255,13 +272,15 @@ class HomePage extends ConsumerWidget {
                 iconColor: Colors.greenAccent,
               ),
               const SizedBox(height: 14),
-              SizedBox(
-                height: 160,
-                child: airingTodayAsync.when(
-                  data: (series) =>
-                      BackdropMediaList(items: series, defaultType: 'tv'),
-                  loading: () => const SkeletonLoader(width: double.infinity, height: 160),
-                  error: (e, s) => _ErrorWidget(message: '$e'),
+              RepaintBoundary(
+                child: SizedBox(
+                  height: 160,
+                  child: airingTodayAsync.when(
+                    data: (series) =>
+                        BackdropMediaList(items: series, defaultType: 'tv'),
+                    loading: () => const SkeletonLoader(width: double.infinity, height: 160),
+                    error: (e, s) => _ErrorWidget(message: '$e'),
+                  ),
                 ),
               ),
 
@@ -273,13 +292,15 @@ class HomePage extends ConsumerWidget {
                 iconColor: Colors.amber,
               ),
               const SizedBox(height: 14),
-              SizedBox(
-                height: 230,
-                child: topRatedSeriesAsync.when(
-                  data: (series) =>
-                      TopTenMediaList(items: series, defaultType: 'tv'),
-                  loading: () => const SkeletonList(height: 230),
-                  error: (e, s) => _ErrorWidget(message: '$e'),
+              RepaintBoundary(
+                child: SizedBox(
+                  height: 230,
+                  child: topRatedSeriesAsync.when(
+                    data: (series) =>
+                        TopTenMediaList(items: series, defaultType: 'tv'),
+                    loading: () => const SkeletonList(height: 230),
+                    error: (e, s) => _ErrorWidget(message: '$e'),
+                  ),
                 ),
               ),
 
