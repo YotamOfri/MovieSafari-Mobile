@@ -8,6 +8,7 @@ import 'package:flutter_app/features/bookmarks/screens/bookmarks_page.dart';
 import 'package:flutter_app/features/shell/screens/app_shell.dart';
 import 'package:flutter_app/features/details/screens/details_page.dart';
 import 'package:flutter_app/features/details/screens/player_page.dart';
+import 'package:flutter_app/features/profile/screens/watch_history_page.dart';
 import 'package:flutter_app/features/shell/screens/initial_splash_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,11 +27,9 @@ Future<void> main() async {
   runApp(const ProviderScope(child: HunterTrackerApp()));
 }
 
-// This is your "Router Configuration" - Just like react-router-dom
 final _router = GoRouter(
   initialLocation: '/splash',
   routes: [
-    // 1. A Top-Level Route (No Navbar here)
     GoRoute(
       path: '/details/:type/:id',
       pageBuilder: (context, state) {
@@ -70,8 +69,6 @@ final _router = GoRouter(
         );
       },
     ),
-
-    // 2. A ShellRoute (This provides the "Layout" or "Wrapper")
     ShellRoute(
       builder: (context, state, child) {
         return AppShell(child: child);
@@ -100,6 +97,10 @@ final _router = GoRouter(
       ],
     ),
     GoRoute(
+      path: '/history',
+      builder: (context, state) => const WatchHistoryPage(),
+    ),
+    GoRoute(
       path: '/splash',
       builder: (context, state) => const InitialSplashScreen(),
     ),
@@ -112,7 +113,7 @@ class HunterTrackerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Streaming App',
+      title: 'Movie Safari',
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
@@ -126,7 +127,7 @@ class HunterTrackerApp extends StatelessWidget {
         colorScheme: const ColorScheme.dark(
           primary: Colors.blueAccent,
           secondary: Colors.blueAccent,
-          surface: Color(0xFF0F1014), // Unified with background
+          surface: Color(0xFF0F1014),
           surfaceContainerHighest: Color(0xFF0F1014),
         ),
         useMaterial3: true,

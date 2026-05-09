@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 class PressableCard extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
+  final VoidCallback? onLongPress;
 
   const PressableCard({
     super.key,
     required this.child,
     required this.onTap,
-    required this.onLongPress,
+    this.onLongPress,
   });
 
   @override
