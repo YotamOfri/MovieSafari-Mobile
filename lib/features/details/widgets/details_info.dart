@@ -24,6 +24,7 @@ class DetailsInfo extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 16),
           Text(
             title,
             style: const TextStyle(

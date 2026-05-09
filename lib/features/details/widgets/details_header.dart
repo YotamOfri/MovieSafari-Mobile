@@ -30,84 +30,145 @@ class DetailsHeader extends StatelessWidget {
       pinned: true,
       stretch: true,
       backgroundColor: const Color(0xFF0F1014),
-      leading: IconButton(
-        icon: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Colors.white,
-            size: 18,
+      surfaceTintColor: Colors.transparent,
+      leadingWidth: 70,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 16),
+        child: Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    width: 0.5,
+                  ),
+                ),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ),
           ),
         ),
-        onPressed: () => Navigator.of(context).pop(),
       ),
       actions: [
-        BookmarkButton(
-          id: id,
-          type: type,
-          title: title,
-          posterPath: details['poster_path'],
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: BookmarkButton(
+            id: id,
+            type: type,
+            title: title,
+            posterPath: details['poster_path'],
+          ),
         ),
         const SizedBox(width: 8),
       ],
-      flexibleSpace: FlexibleSpaceBar(
-        stretchModes: const [
-          StretchMode.zoomBackground,
-          StretchMode.blurBackground,
-        ],
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (backdrop != null)
-              TmdbImage(path: backdrop, highResSize: 'w1280')
-            else
-              Container(color: const Color(0xFF1A1C23)),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.transparent,
-                    const Color(0xFF0F1014).withOpacity(0.8),
-                    const Color(0xFF0F1014),
-                  ],
-                  stops: const [0.0, 0.4, 0.8, 1.0],
+      flexibleSpace: LayoutBuilder(
+        builder: (context, constraints) {
+          final top = constraints.biggest.height;
+          final isCollapsed = top <= kToolbarHeight + MediaQuery.of(context).padding.top + 10;
+
+          return FlexibleSpaceBar(
+            centerTitle: true,
+            title: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: isCollapsed ? 1.0 : 0.0,
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
             ),
-            Center(
-              child: GestureDetector(
-                onTap: () {
-                  HapticFeedback.mediumImpact();
-                  if (type == 'tv') {
-                    context.push('/player/$type/$id?season=1&episode=1');
-                  } else {
-                    context.push('/player/$type/$id');
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(12),
+            background: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (backdrop != null)
+                  TmdbImage(path: backdrop, highResSize: 'w1280')
+                else
+                  Container(color: const Color(0xFF1A1C23)),
+
+                // Glass effect when pinned
+                if (isCollapsed)
+                  Positioned.fill(
+                    child: ClipRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                width: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white24),
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    size: 64,
-                    color: Colors.white,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.transparent,
+                        const Color(0xFF0F1014).withValues(alpha: 0.8),
+                        const Color(0xFF0F1014),
+                      ],
+                      stops: const [0.0, 0.4, 0.8, 1.0],
+                    ),
                   ),
                 ),
-              ),
+                if (!isCollapsed)
+                  Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        if (type == 'tv') {
+                          context.push('/player/$type/$id?season=1&episode=1');
+                        } else {
+                          context.push('/player/$type/$id');
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: const Icon(
+                          Icons.play_arrow_rounded,
+                          size: 64,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
