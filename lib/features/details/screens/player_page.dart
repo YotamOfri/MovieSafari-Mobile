@@ -163,19 +163,17 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
             children: [
               if (backdrop != null)
                 Positioned.fill(
-                  child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-                    child: Opacity(
-                      opacity: 0.4,
-                      child: TmdbImage(
-                        path: backdrop,
-                        highResSize: 'w780',
-                        fit: BoxFit.cover,
-                      ),
+                  child: Opacity(
+                    opacity: 0.3,
+                    child: TmdbImage(
+                      path: backdrop,
+                      highResSize: 'w780',
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
 
+              // Cinematic Gradient Overlay (Instead of heavy blur)
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -183,14 +181,12 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: 0.0),
-                        Colors.black.withValues(alpha: 0.1),
-                        Colors.black.withValues(alpha: 0.3),
-                        Colors.black.withValues(alpha: 0.6),
+                        Colors.black.withValues(alpha: 0.8),
+                        Colors.black.withValues(alpha: 0.4),
+                        Colors.black.withValues(alpha: 0.8),
                         Colors.black,
                       ],
-                      stops: const [0.0, 0.4, 0.6, 0.8, 0.95, 1.0],
+                      stops: const [0.0, 0.4, 0.7, 1.0],
                     ),
                   ),
                 ),
@@ -470,24 +466,20 @@ class _GlassButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
+    return Material(
+      color: Colors.white.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(12),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Material(
-          color: Colors.white.withValues(alpha: 0.1),
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: Colors.white, size: 18),
-            ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            borderRadius: BorderRadius.circular(12),
           ),
+          child: Icon(icon, color: Colors.white, size: 18),
         ),
       ),
     );
@@ -509,37 +501,33 @@ class _GlassActionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
+    return Material(
+      color: Colors.white.withValues(alpha: 0.08),
       borderRadius: BorderRadius.circular(12),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Material(
-          color: Colors.white.withValues(alpha: 0.08),
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              height: 44,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, color: color, size: 16),
-                  const SizedBox(width: 6),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
         ),
       ),
@@ -613,44 +601,40 @@ class _NextEpisodeButton extends ConsumerWidget {
 
     if (isExpanded) {
       return Expanded(
-        child: ClipRRect(
+        child: Material(
+          color: Colors.white.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Material(
-              color: Colors.white.withValues(alpha: 0.08),
-              child: InkWell(
-                onTap: navigateToNext,
-                child: Container(
-                  height: 44,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isNextSeason
-                            ? Icons.keyboard_double_arrow_right_rounded
-                            : Icons.skip_next_rounded,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        label,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
+          child: InkWell(
+            onTap: navigateToNext,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              height: 44,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.1),
                 ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    isNextSeason
+                        ? Icons.keyboard_double_arrow_right_rounded
+                        : Icons.skip_next_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
