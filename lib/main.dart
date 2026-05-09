@@ -8,6 +8,7 @@ import 'package:flutter_app/features/bookmarks/screens/bookmarks_page.dart';
 import 'package:flutter_app/features/shell/screens/app_shell.dart';
 import 'package:flutter_app/features/details/screens/details_page.dart';
 import 'package:flutter_app/features/details/screens/player_page.dart';
+import 'package:flutter_app/features/shell/screens/initial_splash_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -27,7 +28,7 @@ Future<void> main() async {
 
 // This is your "Router Configuration" - Just like react-router-dom
 final _router = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/splash',
   routes: [
     // 1. A Top-Level Route (No Navbar here)
     GoRoute(
@@ -98,6 +99,10 @@ final _router = GoRouter(
         ),
       ],
     ),
+    GoRoute(
+      path: '/splash',
+      builder: (context, state) => const InitialSplashScreen(),
+    ),
   ],
 );
 
@@ -122,7 +127,7 @@ class HunterTrackerApp extends StatelessWidget {
           primary: Colors.blueAccent,
           secondary: Colors.blueAccent,
           surface: Color(0xFF0F1014), // Unified with background
-          surfaceVariant: Color(0xFF0F1014),
+          surfaceContainerHighest: Color(0xFF0F1014),
         ),
         useMaterial3: true,
       ),
