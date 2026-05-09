@@ -19,8 +19,44 @@ class BookmarksPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F1014),
-      body: SafeArea(
-        child: Padding(
+      body: Stack(
+        children: [
+          // 1. Dynamic Soft Backdrop
+          if (bookmarks.isNotEmpty)
+            Positioned.fill(
+              child: RepaintBoundary(
+                child: Image.network(
+                  'https://image.tmdb.org/t/p/w92${bookmarks.first.posterPath}',
+                  fit: BoxFit.cover,
+                  color: Colors.white.withValues(alpha: 0.3),
+                  colorBlendMode: BlendMode.modulate,
+                  cacheWidth: 100,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+            ),
+
+          // 2. Cinematic Shadow Overlays
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF0F1014).withValues(alpha: 0.4),
+                    const Color(0xFF0F1014).withValues(alpha: 0.8),
+                    const Color(0xFF0F1014),
+                  ],
+                  stops: const [0.0, 0.4, 0.8],
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Content
+          SafeArea(
+            child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,7 +98,9 @@ class BookmarksPage extends ConsumerWidget {
           ),
         ),
       ),
-    );
+    ],
+  ),
+);
   }
 
   Widget _buildEmptyState(BuildContext context) {
@@ -72,26 +110,20 @@ class BookmarksPage extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(60),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      width: 1.0,
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.bookmark_border_rounded,
-                    size: 64,
-                    color: Colors.blueAccent.withValues(alpha: 0.8),
-                  ),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  width: 1.0,
                 ),
+              ),
+              child: Icon(
+                Icons.bookmark_border_rounded,
+                size: 64,
+                color: Colors.blueAccent.withValues(alpha: 0.8),
               ),
             ),
             const SizedBox(height: 32),
