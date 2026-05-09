@@ -191,26 +191,22 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
         // Dark overlay
         Container(color: Colors.black.withOpacity(0.55)),
 
-        // Play button
+        // Premium Play Button (Matches Details Page)
         Center(
           child: GestureDetector(
             onTap: _startPlaying,
             child: Container(
-              width: 72,
-              height: 72,
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blueAccent.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blueAccent.withOpacity(0.5),
-                    blurRadius: 24,
-                    spreadRadius: 4,
-                  ),
-                ],
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
               ),
-              child: const Icon(Icons.play_arrow_rounded,
-                  color: Colors.white, size: 40),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                color: Colors.white,
+                size: 64,
+              ),
             ),
           ),
         ),

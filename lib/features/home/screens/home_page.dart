@@ -518,12 +518,20 @@ class _ContinueWatchingCard extends StatelessWidget {
                   ),
                 ),
 
-                // Play Button Overlay
-                const Center(
-                  child: Icon(
-                    Icons.play_circle_filled_rounded,
-                    color: Colors.white70,
-                    size: 40,
+                // Premium Play Button Overlay
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow_rounded,
+                      color: Colors.white,
+                      size: 32,
+                    ),
                   ),
                 ),
               ],
