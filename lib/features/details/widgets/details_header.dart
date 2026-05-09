@@ -35,31 +35,25 @@ class DetailsHeader extends StatelessWidget {
       leading: Padding(
         padding: const EdgeInsets.only(left: 16),
         child: Center(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    width: 1.0,
-                  ),
-                ),
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.3),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.1),
+                width: 1.0,
               ),
+            ),
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+              onPressed: () => Navigator.of(context).pop(),
             ),
           ),
         ),
@@ -103,15 +97,15 @@ class DetailsHeader extends StatelessWidget {
                 else
                   Container(color: const Color(0xFF1A1C23)),
 
-                // Glass effect when pinned
+                // Optimized glass effect when pinned
                 if (isCollapsed)
                   Positioned.fill(
                     child: ClipRect(
                       child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.1),
+                            color: const Color(0xFF0F1014).withValues(alpha: 0.8),
                             border: Border(
                               bottom: BorderSide(
                                 color: Colors.white.withValues(alpha: 0.1),
@@ -197,52 +191,46 @@ class BookmarkButton extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
-                width: 1.0,
-              ),
-            ),
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              icon: HugeIcon(
-                icon: isBookmarked
-                    ? HugeIcons.strokeRoundedBookmark02
-                    : HugeIcons.strokeRoundedBookmark01,
-                color: isBookmarked ? Colors.blueAccent : Colors.white,
-                size: 18,
-              ),
-              onPressed: () {
-                final bookmark = Bookmark(
-                  id: id,
-                  title: title,
-                  mediaType: type,
-                  posterPath: posterPath,
-                );
-
-                ref.read(bookmarkProvider.notifier).toggleBookmark(bookmark);
-
-                CustomToast.show(
-                  context: context,
-                  message: isBookmarked ? 'Removed $title' : 'Added $title to Bookmarks',
-                  icon: isBookmarked ? Icons.bookmark_remove : Icons.bookmark_add,
-                  posterPath: posterPath,
-                  onUndo: () {
-                    ref.read(bookmarkProvider.notifier).toggleBookmark(bookmark);
-                  },
-                );
-              },
-            ),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.3),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.1),
+            width: 1.0,
           ),
+        ),
+        child: IconButton(
+          padding: EdgeInsets.zero,
+          icon: HugeIcon(
+            icon: isBookmarked
+                ? HugeIcons.strokeRoundedBookmark02
+                : HugeIcons.strokeRoundedBookmark01,
+            color: isBookmarked ? Colors.blueAccent : Colors.white,
+            size: 18,
+          ),
+          onPressed: () {
+            final bookmark = Bookmark(
+              id: id,
+              title: title,
+              mediaType: type,
+              posterPath: posterPath,
+            );
+
+            ref.read(bookmarkProvider.notifier).toggleBookmark(bookmark);
+
+            CustomToast.show(
+              context: context,
+              message: isBookmarked ? 'Removed $title' : 'Added $title to Bookmarks',
+              icon: isBookmarked ? Icons.bookmark_remove : Icons.bookmark_add,
+              posterPath: posterPath,
+              onUndo: () {
+                ref.read(bookmarkProvider.notifier).toggleBookmark(bookmark);
+              },
+            );
+          },
         ),
       ),
     );
