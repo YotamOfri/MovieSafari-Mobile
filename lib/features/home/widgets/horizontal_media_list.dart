@@ -44,59 +44,78 @@ class HorizontalMediaList extends ConsumerWidget {
                     HapticFeedback.vibrate();
                     MediaContextMenu.show(context, ref, item, type);
                   },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: AspectRatio(
-                      aspectRatio: 2 / 3,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          TmdbImage(path: posterPath, highResSize: 'w400'),
-                          if (isFinished) ...[
-                            Container(color: Colors.black.withOpacity(0.4)),
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: Colors.greenAccent.withOpacity(0.85),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.check,
-                                        color: Colors.black, size: 10),
-                                    SizedBox(width: 3),
-                                    Text('Watched',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                  ],
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: AspectRatio(
+                        aspectRatio: 2 / 3,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            TmdbImage(path: posterPath, highResSize: 'w400'),
+                            
+                            // Finished Overlay
+                            if (isFinished) ...[
+                              Container(color: Colors.black.withValues(alpha: 0.4)),
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.greenAccent.withValues(alpha: 0.8),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.check_rounded,
+                                          color: Colors.black, size: 12),
+                                      SizedBox(width: 4),
+                                      Text('WATCHED',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: 0.5,
+                                          )),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
+                            
+                            // Progress Dot
+                            if (entry != null && !isFinished)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blueAccent,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: Colors.white, width: 1.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.blueAccent.withValues(alpha: 0.5),
+                                        blurRadius: 6,
+                                        spreadRadius: 1,
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ),
                           ],
-                          if (entry != null && !isFinished)
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: Colors.blueAccent,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                      color: Colors.white, width: 1.5),
-                                ),
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
                     ),
                   ),

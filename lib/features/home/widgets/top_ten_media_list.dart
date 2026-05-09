@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,19 +30,18 @@ class TopTenMediaList extends ConsumerWidget {
         final double rating =
             (item['vote_average'] as num?)?.toDouble() ?? 0.0;
 
-        // Rank gradient colors: gold for 1, silver for 2, bronze for 3, white for rest
         final Color rankColor = index == 0
             ? const Color(0xFFFFD700)
             : index == 1
                 ? const Color(0xFFC0C0C0)
                 : index == 2
                     ? const Color(0xFFCD7F32)
-                    : Colors.white.withValues(alpha: 0.6);
+                    : Colors.white.withValues(alpha: 0.8);
 
         return Padding(
-          padding: const EdgeInsets.only(right: 10.0),
+          padding: const EdgeInsets.only(right: 12.0),
           child: SizedBox(
-            width: 130,
+            width: 140,
             child: PressableCard(
               onTap: () => context.push('/details/$type/$id'),
               onLongPress: () {
@@ -51,97 +51,110 @@ class TopTenMediaList extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Poster + rank overlay
                   Expanded(
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        // Poster card
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: SizedBox.expand(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                      ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        clipBehavior: Clip.none,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
                             child: TmdbImage(
                               path: posterPath,
                               highResSize: 'w342',
                             ),
                           ),
-                        ),
-                        // Rank badge — top-left pill
-                        Positioned(
-                          top: 8,
-                          left: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.75),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: rankColor.withValues(alpha: 0.8),
-                                width: 1.5,
+                          
+                          // Glassmorphic Rank Badge
+                          Positioned(
+                            top: 8,
+                            left: 8,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.4),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: rankColor.withValues(alpha: 0.4),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '#${index + 1}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900,
+                                      color: rankColor,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  '#${index + 1}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    color: rankColor,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ],
-                            ),
                           ),
-                        ),
-                        // Rating badge — bottom-right
-                        Positioned(
-                          bottom: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.7),
+
+                          // Glassmorphic Rating Badge
+                          Positioned(
+                            bottom: 8,
+                            right: 8,
+                            child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.star_rounded,
-                                  color: Colors.amber,
-                                  size: 11,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  rating.toStringAsFixed(1),
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.4),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.star_rounded,
+                                        color: Colors.amber,
+                                        size: 14,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        rating.toStringAsFixed(1),
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                  // Title below card
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Text(
                     title,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
                     ),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],

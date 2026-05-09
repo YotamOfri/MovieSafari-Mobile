@@ -378,7 +378,7 @@ class _ContinueWatchingCard extends StatelessWidget {
         : 'Movie';
 
     return Padding(
-      padding: const EdgeInsets.only(right: 14.0),
+      padding: const EdgeInsets.only(right: 16.0),
       child: GestureDetector(
         onTap: () {
           if (entry.mediaType == 'tv') {
@@ -388,14 +388,20 @@ class _ContinueWatchingCard extends StatelessWidget {
             context.push('/player/${entry.mediaType}/${entry.id}');
           }
         },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: AspectRatio(
-            aspectRatio: 2 / 3,
+        child: Container(
+          width: 140,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
             child: Stack(
               fit: StackFit.expand,
               children: [
                 TmdbImage(path: entry.posterPath, highResSize: 'w400'),
+                
+                // Premium Gradient Overlay
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -403,45 +409,70 @@ class _ContinueWatchingCard extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
+                        Colors.black.withValues(alpha: 0.2),
                         Colors.black.withValues(alpha: 0.8),
+                        Colors.black,
                       ],
-                      stops: const [0.5, 1.0],
+                      stops: const [0.0, 0.4, 0.8, 1.0],
                     ),
                   ),
                 ),
-                const Center(
-                  child: Icon(
-                    Icons.play_circle_filled,
-                    color: Colors.white70,
-                    size: 36,
+
+                // Glassmorphic Info Overlay
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          entry.title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.blueAccent.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+                              ),
+                              child: Text(
+                                subtitle,
+                                style: const TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                Positioned(
-                  bottom: 8,
-                  left: 8,
-                  right: 8,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        entry.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(
-                          color: Colors.blueAccent,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+
+                // Play Button Overlay
+                const Center(
+                  child: Icon(
+                    Icons.play_circle_filled_rounded,
+                    color: Colors.white70,
+                    size: 40,
                   ),
                 ),
               ],
@@ -468,26 +499,35 @@ class _GenreChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        margin: const EdgeInsets.only(right: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 18),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.blueAccent
-              : Colors.white.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(20),
+              ? Colors.white.withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? Colors.blueAccent
+                ? Colors.white.withValues(alpha: 0.3)
                 : Colors.white.withValues(alpha: 0.1),
+            width: 1.2,
           ),
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ] : null,
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white60,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.5),
+            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
             fontSize: 13,
+            letterSpacing: isSelected ? 0.2 : 0,
           ),
         ),
       ),

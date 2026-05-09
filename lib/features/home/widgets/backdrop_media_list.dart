@@ -26,52 +26,62 @@ class BackdropMediaList extends ConsumerWidget {
         final String type = item['media_type'] ?? defaultType ?? 'tv';
 
         return Padding(
-          padding: const EdgeInsets.only(right: 14.0),
+          padding: const EdgeInsets.only(right: 16.0),
           child: SizedBox(
-            width: 260,
+            width: 280,
             child: PressableCard(
               onTap: () => context.push('/details/$type/$id'),
               onLongPress: () {
                 HapticFeedback.vibrate();
                 MediaContextMenu.show(context, ref, item, type);
               },
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    TmdbImage(path: backdropPath, highResSize: 'w500'),
-                    // Gradient overlay for text readability
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.3),
-                            Colors.black.withOpacity(0.8),
-                          ],
-                          stops: const [0.0, 0.6, 1.0],
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      TmdbImage(path: backdropPath, highResSize: 'w500'),
+                      
+                      // Premium Multi-stage Gradient
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.2),
+                              Colors.black.withValues(alpha: 0.8),
+                              Colors.black,
+                            ],
+                            stops: const [0.0, 0.4, 0.8, 1.0],
+                          ),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      bottom: 12,
-                      left: 12,
-                      right: 12,
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+
+                      Positioned(
+                        bottom: 16,
+                        left: 16,
+                        right: 16,
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.3,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
