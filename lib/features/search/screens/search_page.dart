@@ -64,9 +64,54 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F1014),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
+      body: Stack(
+        children: [
+          // 1. Dynamic Soft Backdrop
+          trendingAllAsync.when(
+            data: (items) {
+              if (items.isEmpty) return const SizedBox.shrink();
+              final String? backdrop = items.first['backdrop_path'];
+              if (backdrop == null) return const SizedBox.shrink();
+
+              return Positioned.fill(
+                child: RepaintBoundary(
+                  child: Image.network(
+                    'https://image.tmdb.org/t/p/w92$backdrop',
+                    fit: BoxFit.cover,
+                    color: Colors.white.withValues(alpha: 0.3),
+                    colorBlendMode: BlendMode.modulate,
+                    cacheWidth: 100,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  ),
+                ),
+              );
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (e, s) => const SizedBox.shrink(),
+          ),
+
+          // 2. Cinematic Shadow Overlays
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF0F1014).withValues(alpha: 0.4),
+                    const Color(0xFF0F1014).withValues(alpha: 0.8),
+                    const Color(0xFF0F1014),
+                  ],
+                  stops: const [0.0, 0.4, 0.8],
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Content
+          SafeArea(
+            bottom: false,
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Glassmorphic Search Bar
@@ -157,8 +202,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           ],
         ),
       ),
-    );
-  }
+    ],
+  ),
+);
+}
 
   Widget _buildEmptyState(List<String> history, AsyncValue<List<dynamic>> trendingAll) {
     return SingleChildScrollView(
@@ -298,12 +345,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                HugeIcon(
-                  icon: HugeIcons.strokeRoundedFire,
-                  color: Colors.deepOrangeAccent,
-                  size: 20,
-                ),
-                SizedBox(width: 8),
+                SizedBox(width: 0),
                 Text(
                   'Trending Now',
                   style: TextStyle(
@@ -332,12 +374,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                HugeIcon(
-                  icon: HugeIcons.strokeRoundedTv01,
-                  color: Colors.blueAccent,
-                  size: 20,
-                ),
-                SizedBox(width: 8),
+                SizedBox(width: 0),
                 Text(
                   'Popular Series',
                   style: TextStyle(

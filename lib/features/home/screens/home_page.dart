@@ -115,8 +115,6 @@ class HomePage extends ConsumerWidget {
                 const SizedBox(height: 36),
                 _SectionHeader(
                   title: 'Continue Watching',
-                  hugeIcon: HugeIcons.strokeRoundedPlayCircle,
-                  iconColor: Colors.white70,
                 ),
                 const SizedBox(height: 14),
                 SizedBox(
@@ -151,12 +149,7 @@ class HomePage extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedFire,
-                      color: Colors.deepOrangeAccent,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 7),
+                    const SizedBox(width: 0),
                     Text(
                       selectedGenre == null
                           ? 'Trending Movies'
@@ -189,12 +182,7 @@ class HomePage extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedTv01,
-                      color: Colors.blueAccent,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 7),
+                    const SizedBox(width: 0),
                     Text(
                       selectedGenre == null
                           ? 'Trending Series'
@@ -228,8 +216,6 @@ class HomePage extends ConsumerWidget {
               const SizedBox(height: 44),
               _SectionHeader(
                 title: 'Top 10 Movies This Week',
-                hugeIcon: HugeIcons.strokeRoundedMedalFirstPlace,
-                iconColor: Colors.amber,
               ),
               const SizedBox(height: 14),
               RepaintBoundary(
@@ -248,8 +234,6 @@ class HomePage extends ConsumerWidget {
               const SizedBox(height: 36),
               _SectionHeader(
                 title: 'Coming Soon',
-                hugeIcon: HugeIcons.strokeRoundedCalendar01,
-                iconColor: Colors.purpleAccent,
               ),
               const SizedBox(height: 14),
               RepaintBoundary(
@@ -268,8 +252,6 @@ class HomePage extends ConsumerWidget {
               const SizedBox(height: 36),
               _SectionHeader(
                 title: 'Airing Today',
-                hugeIcon: HugeIcons.strokeRoundedLiveStreaming01,
-                iconColor: Colors.greenAccent,
               ),
               const SizedBox(height: 14),
               RepaintBoundary(
@@ -288,8 +270,6 @@ class HomePage extends ConsumerWidget {
               const SizedBox(height: 36),
               _SectionHeader(
                 title: 'Top 10 Series This Week',
-                hugeIcon: HugeIcons.strokeRoundedRanking,
-                iconColor: Colors.amber,
               ),
               const SizedBox(height: 14),
               RepaintBoundary(
