@@ -8,6 +8,7 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../providers/api_provider.dart';
 import '../../../providers/search_history_provider.dart';
 import '../../../providers/watch_history_provider.dart';
+import '../../../providers/bookmark_provider.dart';
 import '../../../widgets/tmdb_image.dart';
 import '../../../widgets/media_context_menu.dart';
 import '../../../widgets/pressable_card.dart';
@@ -427,6 +428,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
         final entry = history.cast<WatchedEntry?>().firstWhere((e) => e?.id == id && e?.mediaType == mediaType, orElse: () => null);
         final bool isFinished = entry?.isFinished ?? false;
+        
+        final isBookmarked = ref.watch(bookmarkProvider).any((b) => b.id == id && b.mediaType == mediaType);
 
         return PressableCard(
           onTap: () => context.push('/details/$mediaType/$id'),
@@ -440,6 +443,26 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               fit: StackFit.expand,
               children: [
                 TmdbImage(path: posterPath, highResSize: 'w500'),
+
+                // Bookmark badge
+                if (isBookmarked)
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                      ),
+                      child: const Icon(
+                        Icons.bookmark_rounded,
+                        color: Colors.blueAccent,
+                        size: 14,
+                      ),
+                    ),
+                  ),
 
                 // Watched badge (Optimized)
                 if (isFinished)

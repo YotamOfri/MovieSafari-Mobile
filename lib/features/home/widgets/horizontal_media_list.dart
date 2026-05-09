@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../providers/watch_history_provider.dart';
+import '../../../providers/bookmark_provider.dart';
 import '../../../widgets/tmdb_image.dart';
 import '../../../widgets/media_context_menu.dart';
 import '../../../widgets/pressable_card.dart';
@@ -31,6 +32,8 @@ class HorizontalMediaList extends ConsumerWidget {
             (e) => e?.id == id && e?.mediaType == type,
             orElse: () => null);
         final bool isFinished = entry?.isFinished ?? false;
+        
+        final isBookmarked = ref.watch(bookmarkProvider).any((b) => b.id == id && b.mediaType == type);
 
         return Padding(
           padding: const EdgeInsets.only(right: 14.0),
@@ -91,6 +94,26 @@ class HorizontalMediaList extends ConsumerWidget {
                               ),
                             ],
                             
+                            // Bookmark Badge
+                            if (isBookmarked)
+                              Positioned(
+                                top: 8,
+                                left: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.6),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                                  ),
+                                  child: const Icon(
+                                    Icons.bookmark_rounded,
+                                    color: Colors.blueAccent,
+                                    size: 14,
+                                  ),
+                                ),
+                              ),
+                            
                             // Progress Dot
                             if (entry != null && !isFinished)
                               Positioned(
@@ -104,13 +127,6 @@ class HorizontalMediaList extends ConsumerWidget {
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                         color: Colors.white, width: 1.5),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.blueAccent.withValues(alpha: 0.5),
-                                        blurRadius: 6,
-                                        spreadRadius: 1,
-                                      )
-                                    ],
                                   ),
                                 ),
                               ),
