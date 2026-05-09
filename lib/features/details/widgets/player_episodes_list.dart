@@ -67,6 +67,7 @@ class PlayerEpisodesList extends ConsumerWidget {
                   final int epNumber = episode['episode_number'];
                   final String epName = episode['name'] ?? 'Episode $epNumber';
                   final String? epStill = episode['still_path'];
+                  final int? epRuntime = episode['runtime'];
                   final bool isSelected = currentEpisode == epNumber;
                   final bool isWatched = historyNotifier.isEpisodeFinished(id, season, epNumber);
 
@@ -74,6 +75,7 @@ class PlayerEpisodesList extends ConsumerWidget {
                     epNumber: epNumber,
                     epName: epName,
                     epStill: epStill,
+                    epRuntime: epRuntime,
                     isSelected: isSelected,
                     isWatched: isWatched,
                     onTap: () {
@@ -100,6 +102,7 @@ class _EpisodeCard extends StatelessWidget {
   final int epNumber;
   final String epName;
   final String? epStill;
+  final int? epRuntime;
   final bool isSelected;
   final bool isWatched;
   final VoidCallback onTap;
@@ -108,6 +111,7 @@ class _EpisodeCard extends StatelessWidget {
     required this.epNumber,
     required this.epName,
     required this.epStill,
+    required this.epRuntime,
     required this.isSelected,
     required this.isWatched,
     required this.onTap,
@@ -128,7 +132,7 @@ class _EpisodeCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Background Image
+              // Background Image with Dark Overlay
               if (epStill != null)
                 TmdbImage(
                   path: epStill,
@@ -138,7 +142,14 @@ class _EpisodeCard extends StatelessWidget {
               else
                 Container(color: Colors.white.withValues(alpha: 0.05)),
 
-              // Dynamic Overlay
+              // 1. Dark Overlay (Creates "Lower Opacity" Look)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.4),
+                ),
+              ),
+
+              // 2. Dynamic Gradient Overlay
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -146,10 +157,10 @@ class _EpisodeCard extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withValues(alpha: 0.4),
-                      Colors.black.withValues(alpha: 0.95),
+                      Colors.black.withValues(alpha: 0.3),
+                      Colors.black.withValues(alpha: 0.8),
                     ],
-                    stops: const [0.3, 0.6, 1.0],
+                    stops: const [0.0, 0.5, 1.0],
                   ),
                 ),
               ),
@@ -175,14 +186,43 @@ class _EpisodeCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'Episode $epNumber',
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.6),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.0,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'EPISODE $epNumber',
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.6),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                        if (epRuntime != null) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            '•',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.4),
+                              fontSize: 10,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.access_time_rounded,
+                            color: Colors.white.withValues(alpha: 0.5),
+                            size: 10,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${epRuntime}m',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
