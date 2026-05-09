@@ -17,6 +17,40 @@ final trendingSeriesProvider = FutureProvider<List<dynamic>>((ref) async {
   return response.data['results'] as List<dynamic>;
 });
 
+// Top Rated Movies
+final topRatedMoviesProvider = FutureProvider<List<dynamic>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  final response = await api.dio.get('/movie/top_rated?language=en-US&page=1');
+  return response.data['results'] as List<dynamic>;
+});
+
+// Upcoming Movies
+final upcomingMoviesProvider = FutureProvider<List<dynamic>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  final response = await api.dio.get('/movie/upcoming?language=en-US&page=1');
+  return response.data['results'] as List<dynamic>;
+});
+
+// Top Rated Series
+final topRatedSeriesProvider = FutureProvider<List<dynamic>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  final response = await api.dio.get('/tv/top_rated?language=en-US&page=1');
+  return response.data['results'] as List<dynamic>;
+});
+
+// Airing Today Series
+final airingTodaySeriesProvider = FutureProvider<List<dynamic>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  final response = await api.dio.get('/tv/airing_today?language=en-US&page=1');
+  return response.data['results'] as List<dynamic>;
+});
+
+// Carousel Hero Items
+final heroCarouselProvider = FutureProvider<List<dynamic>>((ref) async {
+  final movies = await ref.watch(trendingMoviesProvider.future);
+  return movies.take(5).toList();
+});
+
 // Movie Details
 final movieDetailsProvider =
     FutureProvider.family<Map<String, dynamic>, int>((ref, id) async {

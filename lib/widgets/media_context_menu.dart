@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/bookmark_provider.dart';
 import '../providers/watch_history_provider.dart';
+import '../providers/api_provider.dart';
 import 'tmdb_image.dart';
 
 class MediaContextMenu {
@@ -32,137 +33,192 @@ class MediaContextMenu {
       isScrollControlled: true,
       builder: (sheetContext) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1C23).withOpacity(0.85),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
-          ),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+        child: Consumer(
+          builder: (context, ref, _) {
+            // Check if we need to fetch more data
+            final bool needsData = item['overview'] == null || item['vote_average'] == null;
+            
+            AsyncValue<Map<String, dynamic>>? detailsAsync;
+            if (needsData) {
+              detailsAsync = type == 'movie'
+                  ? ref.watch(movieDetailsProvider(id))
+                  : ref.watch(tvDetailsProvider(id));
+            }
+
+            // Extract display data, prefer details if available
+            final data = detailsAsync?.value ?? item;
+            final String displayTitle = data['title'] ?? data['name'] ?? title;
+            final String? displayPoster = data['poster_path'] ?? posterPath;
+            final double displayRating = (data['vote_average'] as num?)?.toDouble() ?? rating;
+            final String displayYear = (data['release_date'] ?? data['first_air_date'] ?? year)
+                .toString()
+                .split('-')[0];
+            final String displayOverview = data['overview'] ?? overview;
+
+            return Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1C23).withOpacity(0.85),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
               ),
-              const SizedBox(height: 24),
-              Row(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: SizedBox(
-                      width: 100,
-                      child: AspectRatio(
-                        aspectRatio: 2 / 3,
-                        child: TmdbImage(path: posterPath, highResSize: 'w200'),
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                  const SizedBox(height: 24),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: SizedBox(
+                          width: 100,
+                          child: AspectRatio(
+                            aspectRatio: 2 / 3,
+                            child: TmdbImage(path: displayPoster, highResSize: 'w200'),
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 8),
-                        Row(
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (year.isNotEmpty) ...[
-                              Text(
-                                year,
-                                style: TextStyle(
-                                    color: Colors.white.withOpacity(0.5),
-                                    fontSize: 14),
-                              ),
-                              const SizedBox(width: 12),
-                            ],
-                            const Icon(Icons.star_rounded,
-                                color: Colors.amber, size: 18),
-                            const SizedBox(width: 4),
                             Text(
-                              rating.toStringAsFixed(1),
+                              displayTitle,
                               style: const TextStyle(
-                                  color: Colors.amber,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14),
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
+                            const SizedBox(height: 8),
+                            if (needsData && detailsAsync != null && detailsAsync.isLoading)
+                              const SizedBox(
+                                height: 14,
+                                width: 14,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.blueAccent),
+                              )
+                            else
+                              Row(
+                                children: [
+                                  if (displayYear.isNotEmpty) ...[
+                                    Text(
+                                      displayYear,
+                                      style: TextStyle(
+                                          color: Colors.white.withOpacity(0.5),
+                                          fontSize: 14),
+                                    ),
+                                    const SizedBox(width: 12),
+                                  ],
+                                  const Icon(Icons.star_rounded,
+                                      color: Colors.amber, size: 18),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    displayRating.toStringAsFixed(1),
+                                    style: const TextStyle(
+                                        color: Colors.amber,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                            const SizedBox(height: 12),
+                            if (needsData && detailsAsync != null && detailsAsync.isLoading)
+                              Container(
+                                height: 60,
+                                alignment: Alignment.centerLeft,
+                                child: Text('Loading description...',
+                                    style: TextStyle(
+                                        color: Colors.white.withOpacity(0.3),
+                                        fontSize: 13,
+                                        fontStyle: FontStyle.italic)),
+                              )
+                            else
+                              Text(
+                                displayOverview,
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.6),
+                                  fontSize: 13,
+                                  height: 1.4,
+                                ),
+                                maxLines: 4,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          overview,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
-                            fontSize: 13,
-                            height: 1.4,
-                          ),
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 24),
+                  const Divider(color: Colors.white10, height: 1),
+                  const SizedBox(height: 12),
+                  _ContextAction(
+                    icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                    label: isBookmarked ? 'Remove Bookmark' : 'Add to Bookmarks',
+                    color: Colors.blueAccent,
+                    onTap: () {
+                      bookmarkNotifier.toggleBookmark(Bookmark(
+                          id: id,
+                          title: displayTitle,
+                          mediaType: type,
+                          posterPath: displayPoster));
+                      Navigator.pop(sheetContext);
+                    },
+                  ),
+                  _ContextAction(
+                    icon: isFinished ? Icons.check_circle : Icons.check_circle_outline,
+                    label: isFinished ? 'Mark as Unwatched' : 'Mark as Watched',
+                    color: Colors.greenAccent,
+                    onTap: () {
+                      historyNotifier.toggleFinished(
+                        id: id,
+                        mediaType: type,
+                        title: displayTitle,
+                        posterPath: displayPoster,
+                      );
+                      Navigator.pop(sheetContext);
+                    },
+                  ),
+                  _ContextAction(
+                    icon: Icons.info_outline,
+                    label: 'View Full Details',
+                    color: Colors.white70,
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      context.push('/details/$type/$id');
+                    },
+                  ),
+                  if (entry != null) ...[
+                    const SizedBox(height: 12),
+                    _ContextAction(
+                      icon: Icons.history_toggle_off,
+                      label: 'Remove from History',
+                      color: Colors.redAccent,
+                      onTap: () {
+                        historyNotifier.removeEntry(id, type);
+                        Navigator.pop(sheetContext);
+                      },
+                    ),
+                  ],
                 ],
               ),
-              const SizedBox(height: 24),
-              const Divider(color: Colors.white10, height: 1),
-              const SizedBox(height: 12),
-              _ContextAction(
-                icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                label: isBookmarked ? 'Remove Bookmark' : 'Add to Bookmarks',
-                color: Colors.blueAccent,
-                onTap: () {
-                  bookmarkNotifier.toggleBookmark(Bookmark(
-                      id: id,
-                      title: title,
-                      mediaType: type,
-                      posterPath: posterPath));
-                  Navigator.pop(sheetContext);
-                },
-              ),
-              _ContextAction(
-                icon: isFinished ? Icons.check_circle : Icons.check_circle_outline,
-                label: isFinished ? 'Mark as Unwatched' : 'Mark as Watched',
-                color: Colors.greenAccent,
-                onTap: () {
-                  historyNotifier.toggleFinished(
-                    id: id,
-                    mediaType: type,
-                    title: title,
-                    posterPath: posterPath,
-                  );
-                  Navigator.pop(sheetContext);
-                },
-              ),
-              _ContextAction(
-                icon: Icons.info_outline,
-                label: 'View Full Details',
-                color: Colors.white70,
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  context.push('/details/$type/$id');
-                },
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

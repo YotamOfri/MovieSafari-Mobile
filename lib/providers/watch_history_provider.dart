@@ -234,6 +234,18 @@ class WatchHistoryNotifier extends Notifier<List<WatchedEntry>> {
     }
   }
 
+  Future<void> removeEntry(int id, String mediaType) async {
+    state = state
+        .where((e) => !(e.id == id && e.mediaType == mediaType))
+        .toList();
+    await _save();
+  }
+
+  Future<void> clearAll() async {
+    state = [];
+    await _save();
+  }
+
   WatchedEntry? getEntry(int id, String mediaType) {
     try {
       return state.firstWhere((e) => e.id == id && e.mediaType == mediaType);

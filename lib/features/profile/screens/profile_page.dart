@@ -6,6 +6,7 @@ import '../../../providers/watch_history_provider.dart';
 import '../../../providers/bookmark_provider.dart';
 import '../../../providers/search_history_provider.dart';
 import '../../../widgets/tmdb_image.dart';
+import '../../../widgets/media_context_menu.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -83,7 +84,7 @@ class ProfilePage extends ConsumerWidget {
                   // Clear all history
                   showDialog(
                     context: context,
-                    builder: (_) => AlertDialog(
+                    builder: (dialogContext) => AlertDialog(
                       backgroundColor: const Color(0xFF1A1C23),
                       title: const Text('Clear History',
                           style: TextStyle(color: Colors.white)),
@@ -91,14 +92,14 @@ class ProfilePage extends ConsumerWidget {
                           style: TextStyle(color: Colors.grey)),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.pop(dialogContext),
                           child: const Text('Cancel',
                               style: TextStyle(color: Colors.grey)),
                         ),
                         TextButton(
                           onPressed: () {
-                            // We don't have a clearAll on history yet, handle below
-                            Navigator.pop(context);
+                            ref.read(watchHistoryProvider.notifier).clearAll();
+                            Navigator.pop(dialogContext);
                           },
                           child: const Text('Clear',
                               style: TextStyle(color: Colors.redAccent)),
@@ -138,6 +139,14 @@ class ProfilePage extends ConsumerWidget {
                             context
                                 .push('/player/${entry.mediaType}/${entry.id}');
                           }
+                        },
+                        onLongPress: () {
+                          MediaContextMenu.show(
+                            context,
+                            ref,
+                            entry.toJson(),
+                            entry.mediaType,
+                          );
                         },
                         child: Container(
                           width: 110,
@@ -212,7 +221,7 @@ class ProfilePage extends ConsumerWidget {
                 onTap: () {
                   showDialog(
                     context: context,
-                    builder: (_) => AlertDialog(
+                    builder: (dialogContext) => AlertDialog(
                       backgroundColor: const Color(0xFF1A1C23),
                       title: const Text('Clear Bookmarks',
                           style: TextStyle(color: Colors.white)),
@@ -220,13 +229,13 @@ class ProfilePage extends ConsumerWidget {
                           style: TextStyle(color: Colors.grey)),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.pop(dialogContext),
                           child: const Text('Cancel',
                               style: TextStyle(color: Colors.grey)),
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.pop(context);
+                            Navigator.pop(dialogContext);
                             // Note: bulk clear is not implemented in bookmark provider
                             // For now, show a message
                             ScaffoldMessenger.of(context).showSnackBar(
