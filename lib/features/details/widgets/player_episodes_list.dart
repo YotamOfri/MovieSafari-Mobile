@@ -122,23 +122,9 @@ class _EpisodeCard extends StatelessWidget {
         width: 240,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected
-                ? Colors.white.withValues(alpha: 0.3)
-                : Colors.white.withValues(alpha: 0.1),
-            width: isSelected ? 1.5 : 1,
-          ),
-          boxShadow: [
-            if (isSelected)
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-          ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(16),
           child: Stack(
             fit: StackFit.expand,
             children: [

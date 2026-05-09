@@ -48,7 +48,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     _prevSeason = widget.season;
     _prevEpisode = widget.episode;
     
-    final double initialOffset = (widget.episode - 1) * 232.0;
+    // Updated for new card width (240) + spacing (16)
+    final double initialOffset = (widget.episode - 1) * 256.0;
     _episodesScrollController =
         ScrollController(initialScrollOffset: initialOffset);
   }
@@ -63,7 +64,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
 
       if (_episodesScrollController.hasClients) {
         _episodesScrollController.animateTo(
-          (widget.episode - 1) * 232.0,
+          (widget.episode - 1) * 256.0,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );
