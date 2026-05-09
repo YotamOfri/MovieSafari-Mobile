@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -6,6 +7,7 @@ import '../../../providers/watch_history_provider.dart';
 import '../../../widgets/tmdb_image.dart';
 import '../../../widgets/pressable_card.dart';
 import '../../../widgets/media_context_menu.dart';
+import '../../../widgets/discovery_button.dart';
 
 class WatchHistoryPage extends ConsumerStatefulWidget {
   const WatchHistoryPage({super.key});
@@ -80,7 +82,7 @@ class _WatchHistoryPageState extends ConsumerState<WatchHistoryPage> {
           
           Expanded(
             child: filteredHistory.isEmpty
-                ? _buildEmptyState()
+                ? _buildEmptyState(context)
                 : GridView.builder(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -101,27 +103,54 @@ class _WatchHistoryPageState extends ConsumerState<WatchHistoryPage> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          HugeIcon(
-            icon: HugeIcons.strokeRoundedPlay,
-            size: 64,
-            color: Colors.white.withValues(alpha: 0.1),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _filter == 'All' ? 'No history found' : 'No results for $_filter',
-            style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Movies and shows you watch will appear here",
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 14),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.blueAccent.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.history_rounded,
+                size: 64,
+                color: Colors.blueAccent.withValues(alpha: 0.4),
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Text(
+              'No watch history',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Movies and series you watch will appear here so you can easily resume them.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.4),
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 40),
+            DiscoveryButton(
+              label: 'Start Watching',
+              icon: Icons.play_arrow_rounded,
+              onTap: () => context.go('/'),
+            ),
+          ],
+        ),
       ),
     );
   }

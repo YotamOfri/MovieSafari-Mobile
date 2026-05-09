@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -6,6 +7,7 @@ import '../../../providers/bookmark_provider.dart';
 import '../../../widgets/tmdb_image.dart';
 import '../../../widgets/media_context_menu.dart';
 import '../../../widgets/pressable_card.dart';
+import '../../../widgets/discovery_button.dart';
 
 class BookmarksPage extends ConsumerWidget {
   const BookmarksPage({super.key});
@@ -39,7 +41,7 @@ class BookmarksPage extends ConsumerWidget {
               const SizedBox(height: 32),
               Expanded(
                 child: bookmarks.isEmpty
-                    ? _buildEmptyState()
+                    ? _buildEmptyState(context)
                     : GridView.builder(
                         padding: const EdgeInsets.only(bottom: 120),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -62,27 +64,54 @@ class BookmarksPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          HugeIcon(
-            icon: HugeIcons.strokeRoundedBookmark01,
-            size: 64,
-            color: Colors.grey.shade800,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'No bookmarks yet',
-            style: TextStyle(fontSize: 18, color: Colors.grey),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Save movies and series to watch later',
-            style: TextStyle(color: Colors.grey, fontSize: 14),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.blueAccent.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.bookmark_border_rounded,
+                size: 64,
+                color: Colors.blueAccent.withValues(alpha: 0.4),
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Text(
+              'Your library is empty',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Save movies and series you want to watch later and they will appear here.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.4),
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 40),
+            DiscoveryButton(
+              label: 'Explore Movies',
+              icon: Icons.explore_rounded,
+              onTap: () => context.go('/'),
+            ),
+          ],
+        ),
       ),
     );
   }

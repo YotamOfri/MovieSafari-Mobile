@@ -202,13 +202,30 @@ class MediaContextMenu {
                     label: isFinished ? 'Mark as Unwatched' : 'Mark as Watched',
                     color: Colors.greenAccent,
                     onTap: () {
+                      final wasFinished = isFinished;
                       historyNotifier.toggleFinished(
                         id: id,
                         mediaType: type,
                         title: displayTitle,
                         posterPath: displayPoster,
                       );
+                      
                       Navigator.pop(sheetContext);
+
+                      CustomToast.show(
+                        context: context,
+                        message: wasFinished ? 'Marked $displayTitle as Unwatched' : 'Marked $displayTitle as Watched',
+                        icon: wasFinished ? Icons.check_circle_outline : Icons.check_circle,
+                        posterPath: displayPoster,
+                        onUndo: () {
+                          historyNotifier.toggleFinished(
+                            id: id,
+                            mediaType: type,
+                            title: displayTitle,
+                            posterPath: displayPoster,
+                          );
+                        },
+                      );
                     },
                   ),
                   _ContextAction(

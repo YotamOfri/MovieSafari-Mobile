@@ -593,7 +593,7 @@ class _BookmarkButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isBookmarked = ref.watch(bookmarkProvider.notifier).isBookmarked(id, type);
+    final isBookmarked = ref.watch(bookmarkProvider).any((b) => b.id == id && b.mediaType == type);
 
     return IconButton(
       icon: HugeIcon(
