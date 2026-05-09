@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import '../../../widgets/tmdb_image.dart';
-import '../../../providers/api_provider.dart'; // For tmdbGenres
+import '../../../providers/api_provider.dart';
 
 class HomeHeroCarousel extends StatefulWidget {
   final List<dynamic> items;
@@ -14,39 +13,54 @@ class HomeHeroCarousel extends StatefulWidget {
   State<HomeHeroCarousel> createState() => _HomeHeroCarouselState();
 }
 
-class _HomeHeroCarouselState extends State<HomeHeroCarousel> {
+class _HomeHeroCarouselState extends State<HomeHeroCarousel> with SingleTickerProviderStateMixin {
   late PageController _pageController;
+  late AnimationController _progressController;
   int _currentPage = 0;
-  Timer? _timer;
+  Timer? _autoPlayTimer;
+  static const int _infiniteFactor = 10000;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0);
-    _startTimer();
-  }
+    // Start in the middle of a very large range to simulate infinity
+    final int initialPage = widget.items.length * (_infiniteFactor ~/ 2);
+    _currentPage = initialPage;
+    _pageController = PageController(initialPage: initialPage);
+    
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    );
 
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) {
-      if (_currentPage < widget.items.length - 1) {
-        _currentPage++;
-      } else {
-        _currentPage = 0;
-      }
-      if (_pageController.hasClients) {
-        _pageController.animateToPage(
-          _currentPage,
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeInOut,
-        );
+    _progressController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _nextPage();
       }
     });
+
+    _progressController.forward();
+  }
+
+  void _nextPage() {
+    if (_pageController.hasClients) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeInOutCubic,
+      );
+    }
+  }
+
+  void _resetTimer() {
+    _progressController.reset();
+    _progressController.forward();
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _autoPlayTimer?.cancel();
     _pageController.dispose();
+    _progressController.dispose();
     super.dispose();
   }
 
@@ -55,6 +69,8 @@ class _HomeHeroCarouselState extends State<HomeHeroCarousel> {
     if (widget.items.isEmpty) {
       return const HeroLoadingPlaceholder();
     }
+
+    final int realCount = widget.items.length;
 
     return SizedBox(
       height: 600,
@@ -67,35 +83,68 @@ class _HomeHeroCarouselState extends State<HomeHeroCarousel> {
               setState(() {
                 _currentPage = page;
               });
+              _resetTimer();
             },
-            itemCount: widget.items.length,
+            itemCount: realCount * _infiniteFactor,
             itemBuilder: (context, index) {
-              final item = widget.items[index];
+              final item = widget.items[index % realCount];
               return _HeroItem(item: item);
             },
           ),
           
-          // Page Indicators
+          // Page Indicators (Modern Progress Dots)
           Positioned(
-            bottom: 24,
+            bottom: 30,
             left: 0,
             right: 0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                widget.items.length,
-                (index) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  height: 6,
-                  width: _currentPage == index ? 24 : 6,
-                  decoration: BoxDecoration(
-                    color: _currentPage == index
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
+                realCount,
+                (index) {
+                  final bool isCurrent = (_currentPage % realCount) == index;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeInOut,
+                      height: 6,
+                      width: isCurrent ? 32 : 6,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      child: isCurrent
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(3),
+                              child: AnimatedBuilder(
+                                animation: _progressController,
+                                builder: (context, child) {
+                                  return Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Container(
+                                      height: 6,
+                                      width: 32 * _progressController.value,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(3),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.white.withValues(alpha: 0.3),
+                                            blurRadius: 4,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
+                          : null,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -147,8 +196,8 @@ class _HeroItem extends StatelessWidget {
               end: Alignment.bottomCenter,
               colors: [
                 Colors.transparent,
-                const Color(0xFF0F1014).withOpacity(0.4),
-                const Color(0xFF0F1014).withOpacity(0.9),
+                const Color(0xFF0F1014).withValues(alpha: 0.4),
+                const Color(0xFF0F1014).withValues(alpha: 0.9),
                 const Color(0xFF0F1014),
               ],
               stops: const [0.0, 0.4, 0.7, 1.0],
@@ -158,11 +207,11 @@ class _HeroItem extends StatelessWidget {
         
         // Content
         Positioned(
-          bottom: 50,
+          bottom: 70,
           left: 0,
           right: 0,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -173,9 +222,10 @@ class _HeroItem extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 36,
+                    fontSize: 34,
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
+                    letterSpacing: -0.5,
                     height: 1.1,
                   ),
                 ),
@@ -185,125 +235,164 @@ class _HeroItem extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const HugeIcon(icon: HugeIcons.strokeRoundedStar, color: Colors.amber, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      rating.toStringAsFixed(1),
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            rating.toStringAsFixed(1),
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 13),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(width: 12),
                     if (firstAirDate != null && firstAirDate.isNotEmpty)
                       Text(
                         firstAirDate.split('-')[0],
-                        style: const TextStyle(color: Colors.grey, fontSize: 13),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                
-                // Genre Tags
-                if (genreNames.isNotEmpty)
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    alignment: WrapAlignment.center,
-                    children: genreNames.take(3).map((genre) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white.withOpacity(0.15)),
-                        ),
-                        child: Text(
-                          genre,
-                          style: const TextStyle(fontSize: 11, color: Colors.white70),
-                        ),
-                      );
-                    }).toList(),
-                  ),
                 const SizedBox(height: 16),
                 
-                // Description
+                // Description (More readable)
                 if (overview != null && overview.isNotEmpty)
                   Text(
                     overview,
                     textAlign: TextAlign.center,
-                    maxLines: 3,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade400,
-                      height: 1.4,
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.7),
+                      height: 1.5,
                     ),
                   ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+
+                // Genre Tags (Floating style) - Moved below description
+                if (genreNames.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 24.0),
+                    child: Wrap(
+                      spacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: genreNames.take(3).map((genre) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                          ),
+                          child: Text(
+                            genre,
+                            style: const TextStyle(fontSize: 10, color: Colors.white70),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 
-                // Buttons (Smaller and sleeker)
+                // Buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Sleek circular Play Button with label
-                    InkWell(
+                    _PrimaryButton(
+                      label: 'Watch Now',
+                      icon: Icons.play_arrow_rounded,
                       onTap: () => context.push('/player/$type/$id'),
-                      borderRadius: BorderRadius.circular(30),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.white.withOpacity(0.2),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: const [
-                            Icon(Icons.play_arrow_rounded, color: Colors.black, size: 24),
-                            SizedBox(width: 6),
-                            Text(
-                              'Play',
-                              style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                     const SizedBox(width: 16),
-                    // More Info Button
-                    InkWell(
+                    _SecondaryButton(
+                      label: 'Details',
+                      icon: Icons.info_outline_rounded,
                       onTap: () => context.push('/details/$type/$id'),
-                      borderRadius: BorderRadius.circular(30),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(color: Colors.white.withOpacity(0.2)),
-                        ),
-                        child: Row(
-                          children: const [
-                            Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
-                            SizedBox(width: 6),
-                            Text(
-                              'Info',
-                              style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _PrimaryButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _PrimaryButton({required this.label, required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          child: Row(
+            children: [
+              Icon(icon, color: Colors.black, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondaryButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _SecondaryButton({required this.label, required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: Colors.white, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
