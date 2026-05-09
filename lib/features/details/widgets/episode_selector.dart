@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,49 +41,68 @@ class EpisodeSelector extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.05)),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<int>(
-                value: selectedSeason,
-                dropdownColor: const Color(0xFF1A1C23),
-                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white60),
-                isExpanded: true,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
-                selectedItemBuilder: (context) => validSeasons.map((season) {
-                  return Center(
-                    child: Row(
+          GestureDetector(
+            onTap: () => _showSeasonPicker(context, validSeasons),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.blueAccent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.layers_rounded,
+                      color: Colors.blueAccent,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          season['name'] ?? 'Season ${season['season_number']}',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          'Season $selectedSeason',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.2,
+                          ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(height: 2),
                         Text(
-                          '(${season['episode_count']} Episodes)',
-                          style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12),
+                          validSeasons.firstWhere((s) => s['season_number'] == selectedSeason)['name'] ?? 'View Episodes',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
-                  );
-                }).toList(),
-                items: validSeasons.map((season) {
-                  return DropdownMenuItem<int>(
-                    value: season['season_number'],
-                    child: Text(season['name'] ?? 'Season ${season['season_number']}'),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    HapticFeedback.mediumImpact();
-                    onSeasonChanged(value);
-                  }
-                },
+                  ),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: Colors.white.withValues(alpha: 0.3),
+                    size: 24,
+                  ),
+                ],
               ),
             ),
           ),
@@ -218,4 +238,201 @@ class EpisodeSelector extends ConsumerWidget {
       ),
     );
   }
+
+  void _showSeasonPicker(BuildContext context, List<dynamic> validSeasons) {
+    HapticFeedback.mediumImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.65,
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F1014).withValues(alpha: 0.5),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withValues(alpha: 0.08),
+                Colors.white.withValues(alpha: 0.02),
+              ],
+            ),
+          ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Select Season',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: 0.3,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                itemCount: validSeasons.length,
+                itemBuilder: (context, index) {
+                  final season = validSeasons[index];
+                  final int sNum = season['season_number'];
+                  final bool isSelected = sNum == selectedSeason;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: InkWell(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        onSeasonChanged(sNum);
+                        Navigator.pop(context);
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isSelected 
+                              ? Colors.blueAccent.withValues(alpha: 0.1)
+                              : Colors.white.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected 
+                                ? Colors.blueAccent.withValues(alpha: 0.4)
+                                : Colors.white.withValues(alpha: 0.05),
+                            width: isSelected ? 1.5 : 1.0,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            // Visual Season Poster
+                            Stack(
+                              children: [
+                                Container(
+                                  width: 60,
+                                  height: 90,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.05),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.1),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: TmdbImage(
+                                      path: season['poster_path'],
+                                      highResSize: 'w200',
+                                    ),
+                                  ),
+                                ),
+                                // Mini number badge on poster
+                                Positioned(
+                                  top: 4,
+                                  left: 4,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: (isSelected ? Colors.blueAccent : Colors.black).withValues(alpha: 0.8),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'S$sNum',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    season['name'] ?? 'Season $sNum',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                                      fontSize: 16,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.movie_filter_rounded,
+                                        size: 14,
+                                        color: Colors.white.withValues(alpha: 0.3),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        '${season['episode_count']} Episodes',
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(alpha: 0.4),
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (season['air_date'] != null) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Aired: ${season['air_date'].toString().split('-')[0]}',
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            if (isSelected)
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blueAccent.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.check_rounded,
+                                  color: Colors.blueAccent,
+                                  size: 20,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
 }

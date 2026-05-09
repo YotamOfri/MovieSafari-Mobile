@@ -35,7 +35,7 @@ class MediaContextMenu {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (sheetContext) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
         child: Consumer(
           builder: (context, ref, _) {
             // Check if we need to fetch more data
@@ -60,9 +60,17 @@ class MediaContextMenu {
 
             return Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1C23).withValues(alpha: 0.85),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                color: const Color(0xFF0F1014).withValues(alpha: 0.5),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.08),
+                    Colors.white.withValues(alpha: 0.02),
+                  ],
+                ),
               ),
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               child: Column(
