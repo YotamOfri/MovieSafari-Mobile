@@ -10,6 +10,7 @@ import '../../../widgets/tmdb_image.dart';
 import '../../../widgets/skeleton_loader.dart';
 import '../../home/widgets/horizontal_media_list.dart';
 import '../widgets/video_player_view.dart';
+import '../../../widgets/custom_toast.dart';
 
 class DetailsPage extends ConsumerStatefulWidget {
   final String type; // 'movie' or 'tv'
@@ -602,27 +603,23 @@ class _BookmarkButton extends ConsumerWidget {
         color: isBookmarked ? Colors.blueAccent : Colors.white,
       ),
       onPressed: () {
-        HapticFeedback.mediumImpact();
-        ref.read(bookmarkProvider.notifier).toggleBookmark(
-              Bookmark(
-                id: id,
-                title: title,
-                mediaType: type,
-                posterPath: posterPath,
-              ),
-            );
+        final bookmark = Bookmark(
+          id: id,
+          title: title,
+          mediaType: type,
+          posterPath: posterPath,
+        );
+
+        ref.read(bookmarkProvider.notifier).toggleBookmark(bookmark);
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            backgroundColor: const Color(0xFF1A1C23),
-            duration: const Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+        CustomToast.show(
+          context: context,
+          message: isBookmarked ? 'Removed $title' : 'Added $title to Bookmarks',
+          icon: isBookmarked ? Icons.bookmark_remove : Icons.bookmark_add,
+          posterPath: posterPath,
+          onUndo: () {
+            ref.read(bookmarkProvider.notifier).toggleBookmark(bookmark);
+          },
         );
       },
     );

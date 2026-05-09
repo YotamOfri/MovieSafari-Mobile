@@ -175,20 +175,25 @@ class MediaContextMenu {
                     label: isBookmarked ? 'Remove Bookmark' : 'Add to Bookmarks',
                     color: Colors.blueAccent,
                     onTap: () {
-                      final title = displayTitle;
                       final wasBookmarked = isBookmarked;
-                      bookmarkNotifier.toggleBookmark(Bookmark(
+                      final bookmark = Bookmark(
                           id: id,
                           title: title,
                           mediaType: type,
-                          posterPath: displayPoster));
+                          posterPath: displayPoster);
+
+                      bookmarkNotifier.toggleBookmark(bookmark);
                       
                       Navigator.pop(sheetContext);
                       
                       CustomToast.show(
-                        context,
-                        wasBookmarked ? 'Removed $title' : 'Added $title to Bookmarks',
-                        wasBookmarked ? Icons.bookmark_remove : Icons.bookmark_add,
+                        context: context,
+                        message: wasBookmarked ? 'Removed $title' : 'Added $title to Bookmarks',
+                        icon: wasBookmarked ? Icons.bookmark_remove : Icons.bookmark_add,
+                        posterPath: displayPoster,
+                        onUndo: () {
+                          bookmarkNotifier.toggleBookmark(bookmark);
+                        },
                       );
                     },
                   ),
