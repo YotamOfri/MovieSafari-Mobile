@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/api_provider.dart';
+import '../../../providers/watch_history_provider.dart';
 import '../../../widgets/skeleton_loader.dart';
 import '../../../widgets/tmdb_image.dart';
 import '../../home/widgets/horizontal_media_list.dart';
@@ -22,6 +23,19 @@ class DetailsPage extends ConsumerStatefulWidget {
 
 class _DetailsPageState extends ConsumerState<DetailsPage> {
   int _selectedSeason = 1;
+  int? _lastWatchedEpisode;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-select last watched season
+    final history = ref.read(watchHistoryProvider);
+    final entry = history.where((e) => e.id == widget.id && e.mediaType == widget.type).firstOrNull;
+    if (entry != null && entry.lastSeason != null) {
+      _selectedSeason = entry.lastSeason!;
+      _lastWatchedEpisode = entry.lastEpisode;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +97,8 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
                     id: widget.id,
                     type: widget.type,
                     details: details,
+                    continueSeason: _selectedSeason,
+                    continueEpisode: _lastWatchedEpisode,
                   ),
                   
                   // 4. Smooth Transition Bridge

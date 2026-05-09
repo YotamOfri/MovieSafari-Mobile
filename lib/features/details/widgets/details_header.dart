@@ -12,12 +12,16 @@ class DetailsHeader extends StatelessWidget {
   final int id;
   final String type;
   final Map<String, dynamic> details;
+  final int? continueSeason;
+  final int? continueEpisode;
 
   const DetailsHeader({
     super.key,
     required this.id,
     required this.type,
     required this.details,
+    this.continueSeason,
+    this.continueEpisode,
   });
 
   @override
@@ -142,22 +146,46 @@ class DetailsHeader extends StatelessWidget {
                       onTap: () {
                         HapticFeedback.mediumImpact();
                         if (type == 'tv') {
-                          context.push('/player/$type/$id?season=1&episode=1');
+                          final s = continueSeason ?? 1;
+                          final e = continueEpisode ?? 1;
+                          context.push('/player/$type/$id?season=$s&episode=$e');
                         } else {
                           context.push('/player/$type/$id');
                         }
                       },
                       child: Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: continueEpisode != null ? 24 : 12,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(continueEpisode != null ? 32 : 100),
                           border: Border.all(color: Colors.white24),
                         ),
-                        child: const Icon(
-                          Icons.play_arrow_rounded,
-                          size: 64,
-                          color: Colors.white,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              continueEpisode != null 
+                                  ? Icons.play_circle_rounded 
+                                  : Icons.play_arrow_rounded,
+                              size: continueEpisode != null ? 28 : 64,
+                              color: Colors.white,
+                            ),
+                            if (continueEpisode != null) ...[
+                              const SizedBox(width: 12),
+                              const Text(
+                                'CONTINUE',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ),

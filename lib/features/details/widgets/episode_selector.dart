@@ -105,6 +105,8 @@ class EpisodeSelector extends ConsumerWidget {
                       final entry = history.where((e) => e.id == id && e.mediaType == 'tv').firstOrNull;
                       final bool isWatched = entry?.isEpisodeFinished(selectedSeason, epNumber) ?? false;
 
+                      final bool isCurrent = entry?.lastSeason == selectedSeason && entry?.lastEpisode == epNumber;
+
                       return GestureDetector(
                         onTap: () {
                           HapticFeedback.mediumImpact();
@@ -115,9 +117,16 @@ class EpisodeSelector extends ConsumerWidget {
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.03),
+                            color: isCurrent 
+                                ? Colors.blueAccent.withValues(alpha: 0.08)
+                                : Colors.white.withValues(alpha: 0.03),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white.withOpacity(0.03)),
+                            border: Border.all(
+                              color: isCurrent 
+                                  ? Colors.blueAccent.withValues(alpha: 0.5)
+                                  : Colors.white.withValues(alpha: 0.03),
+                              width: isCurrent ? 1.5 : 1.0,
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -135,7 +144,7 @@ class EpisodeSelector extends ConsumerWidget {
                                     Positioned.fill(
                                       child: Container(
                                         decoration: BoxDecoration(
-                                          color: Colors.black.withOpacity(0.4),
+                                          color: Colors.black.withValues(alpha: 0.4),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: const Icon(Icons.check_circle, color: Colors.greenAccent, size: 24),
@@ -148,21 +157,45 @@ class EpisodeSelector extends ConsumerWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      '$epNumber. $epName',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            '$epNumber. $epName',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        if (isCurrent)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blueAccent.withValues(alpha: 0.2),
+                                              borderRadius: BorderRadius.circular(4),
+                                              border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+                                            ),
+                                            child: const Text(
+                                              'RESUME',
+                                              style: TextStyle(
+                                                color: Colors.blueAccent,
+                                                fontSize: 8,
+                                                fontWeight: FontWeight.w900,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       episode['overview'] ?? 'No description available',
                                       style: TextStyle(
-                                        color: Colors.white.withOpacity(0.4),
+                                        color: Colors.white.withValues(alpha: 0.4),
                                         fontSize: 11,
                                       ),
                                       maxLines: 2,
