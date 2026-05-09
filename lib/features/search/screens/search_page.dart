@@ -286,11 +286,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             const SizedBox(height: 40),
           ],
 
-          // Categories Section
+          // 2. Discovery Grid
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             child: Text(
-              'Categories',
+              'Discover by Genre',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
@@ -299,45 +299,52 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 100,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                _CategoryCard(
-                  label: 'Action',
-                  icon: HugeIcons.strokeRoundedSword01,
-                  color: Colors.redAccent,
-                  onTap: () => _applyHistoryQuery('Action'),
-                ),
-                _CategoryCard(
-                  label: 'Comedy',
-                  icon: HugeIcons.strokeRoundedChampion,
-                  color: Colors.orangeAccent,
-                  onTap: () => _applyHistoryQuery('Comedy'),
-                ),
-                _CategoryCard(
-                  label: 'Horror',
-                  icon: HugeIcons.strokeRoundedStar,
-                  color: Colors.purpleAccent,
-                  onTap: () => _applyHistoryQuery('Horror'),
-                ),
-                _CategoryCard(
-                  label: 'Sci-Fi',
-                  icon: HugeIcons.strokeRoundedUfo01,
-                  color: Colors.blueAccent,
-                  onTap: () => _applyHistoryQuery('Sci-Fi'),
-                ),
-                _CategoryCard(
-                  label: 'Drama',
-                  icon: HugeIcons.strokeRoundedRanking,
-                  color: Colors.greenAccent,
-                  onTap: () => _applyHistoryQuery('Drama'),
-                ),
-              ],
-            ),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 2.2,
+            children: [
+              _DiscoveryTile(
+                label: 'Action',
+                icon: Icons.bolt_rounded,
+                colors: [Colors.orange.shade800, Colors.deepOrange],
+                onTap: () => _applyHistoryQuery('Action'),
+              ),
+              _DiscoveryTile(
+                label: 'Comedy',
+                icon: Icons.sentiment_very_satisfied_rounded,
+                colors: [Colors.blue.shade700, Colors.lightBlue],
+                onTap: () => _applyHistoryQuery('Comedy'),
+              ),
+              _DiscoveryTile(
+                label: 'Horror',
+                icon: Icons.dark_mode_rounded,
+                colors: [Colors.purple.shade900, Colors.deepPurple],
+                onTap: () => _applyHistoryQuery('Horror'),
+              ),
+              _DiscoveryTile(
+                label: 'Sci-Fi',
+                icon: Icons.rocket_launch_rounded,
+                colors: [Colors.teal.shade800, Colors.tealAccent.shade700],
+                onTap: () => _applyHistoryQuery('Sci-Fi'),
+              ),
+              _DiscoveryTile(
+                label: 'Drama',
+                icon: Icons.theater_comedy_rounded,
+                colors: [Colors.red.shade900, Colors.redAccent],
+                onTap: () => _applyHistoryQuery('Drama'),
+              ),
+              _DiscoveryTile(
+                label: 'Animation',
+                icon: Icons.auto_awesome_rounded,
+                colors: [Colors.pink.shade700, Colors.pinkAccent],
+                onTap: () => _applyHistoryQuery('Animation'),
+              ),
+            ],
           ),
           const SizedBox(height: 48),
 
@@ -363,7 +370,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           trendingAll.when(
             data: (items) => SizedBox(
               height: 195,
-              child: HorizontalMediaList(items: items),
+              child: HorizontalMediaList(items: items, heroPrefix: 'search_trending_'),
             ),
             loading: () => const SkeletonList(height: 195),
             error: (e, s) => const SizedBox.shrink(),
@@ -392,7 +399,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           ref.watch(trendingSeriesProvider).when(
             data: (items) => SizedBox(
               height: 195,
-              child: HorizontalMediaList(items: items),
+              child: HorizontalMediaList(items: items, heroPrefix: 'search_popular_'),
             ),
             loading: () => const SkeletonList(height: 195),
             error: (e, s) => const SizedBox.shrink(),
@@ -430,9 +437,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         final bool isFinished = entry?.isFinished ?? false;
         
         final isBookmarked = ref.watch(bookmarkProvider).any((b) => b.id == id && b.mediaType == mediaType);
+        final String heroTag = 'search_grid_media_${mediaType}_$id';
 
         return PressableCard(
-          onTap: () => context.push('/details/$mediaType/$id'),
+          onTap: () => context.push('/details/$mediaType/$id?heroTag=$heroTag'),
           onLongPress: () {
             HapticFeedback.mediumImpact();
             MediaContextMenu.show(context, ref, item, mediaType);
@@ -442,7 +450,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                TmdbImage(path: posterPath, highResSize: 'w500'),
+                Hero(
+                  tag: heroTag,
+                  child: TmdbImage(path: posterPath, highResSize: 'w500'),
+                ),
 
                 // Bookmark badge
                 if (isBookmarked)
@@ -558,56 +569,64 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 }
 
-class _CategoryCard extends StatelessWidget {
+class _DiscoveryTile extends StatelessWidget {
   final String label;
-  final dynamic icon;
-  final Color color;
+  final IconData icon;
+  final List<Color> colors;
   final VoidCallback onTap;
 
-  const _CategoryCard({
+  const _DiscoveryTile({
     required this.label,
     required this.icon,
-    required this.color,
+    required this.colors,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 12),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.mediumImpact();
-            onTap();
-          },
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            width: 110,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                HugeIcon(icon: icon, color: color, size: 32),
-                const SizedBox(height: 10),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ],
-            ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: colors,
           ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -10,
+              bottom: -10,
+              child: Icon(
+                icon,
+                size: 64,
+                color: Colors.white.withValues(alpha: 0.15),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: Colors.white, size: 20),
+                  const SizedBox(height: 4),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

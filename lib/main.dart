@@ -35,9 +35,10 @@ final _router = GoRouter(
       pageBuilder: (context, state) {
         final type = state.pathParameters['type']!;
         final id = int.parse(state.pathParameters['id']!);
+        final heroTag = state.uri.queryParameters['heroTag'];
         return CustomTransitionPage(
           key: state.pageKey,
-          child: DetailsPage(type: type, id: id),
+          child: DetailsPage(type: type, id: id, heroTag: heroTag),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: animation.drive(

@@ -14,8 +14,9 @@ import '../widgets/cast_list.dart';
 class DetailsPage extends ConsumerStatefulWidget {
   final String type; // 'movie' or 'tv'
   final int id;
+  final String? heroTag;
 
-  const DetailsPage({super.key, required this.type, required this.id});
+  const DetailsPage({super.key, required this.type, required this.id, this.heroTag});
 
   @override
   ConsumerState<DetailsPage> createState() => _DetailsPageState();
@@ -99,6 +100,7 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
                     details: details,
                     continueSeason: _selectedSeason,
                     continueEpisode: _lastWatchedEpisode,
+                    heroTag: widget.heroTag,
                   ),
                   
                   // 4. Smooth Transition Bridge

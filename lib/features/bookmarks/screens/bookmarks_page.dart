@@ -3,10 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../providers/bookmark_provider.dart';
+import '../../../providers/api_provider.dart';
 import '../../../widgets/tmdb_image.dart';
 import '../../../widgets/media_context_menu.dart';
 import '../../../widgets/pressable_card.dart';
 import '../../../widgets/discovery_button.dart';
+import '../../home/widgets/horizontal_media_list.dart';
+import '../../home/widgets/backdrop_media_list.dart';
 
 class BookmarksPage extends ConsumerWidget {
   const BookmarksPage({super.key});
@@ -14,6 +17,7 @@ class BookmarksPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bookmarks = ref.watch(bookmarkProvider);
+    final trendingMovies = ref.watch(trendingMoviesProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F1014),
@@ -76,7 +80,7 @@ class BookmarksPage extends ConsumerWidget {
               const SizedBox(height: 32),
               Expanded(
                 child: bookmarks.isEmpty
-                    ? _buildEmptyState(context)
+                    ? _buildEmptyState(context, trendingMovies)
                     : GridView.builder(
                         padding: const EdgeInsets.only(bottom: 120),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -101,66 +105,102 @@ class BookmarksPage extends ConsumerWidget {
 );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  width: 1.0,
+  Widget _buildEmptyState(BuildContext context, AsyncValue<List<dynamic>> trendingMovies) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        children: [
+          const SizedBox(height: 60),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 1.0,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.bookmark_border_rounded,
+                    size: 64,
+                    color: Colors.blueAccent.withValues(alpha: 0.8),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                const Text(
+                  'Your library is empty',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Save movies and series you want to watch later and they will appear here.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.4),
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                DiscoveryButton(
+                  label: 'Explore Movies',
+                  icon: Icons.explore_rounded,
+                  onTap: () => context.go('/'),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 80),
+          
+          // Recommendation Section
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Recommended for You',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 0.2,
                 ),
               ),
-              child: Icon(
-                Icons.bookmark_border_rounded,
-                size: 64,
-                color: Colors.blueAccent.withValues(alpha: 0.8),
-              ),
             ),
-            const SizedBox(height: 32),
-            const Text(
-              'Your library is empty',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                letterSpacing: -0.5,
-              ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 200,
+            child: trendingMovies.when(
+              data: (movies) => HorizontalMediaList(items: movies, defaultType: 'movie', heroPrefix: 'bookmarks_recs_'),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (_, __) => const SizedBox.shrink(),
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Save movies and series you want to watch later and they will appear here.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.4),
-                fontSize: 14,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 40),
-            DiscoveryButton(
-              label: 'Explore Movies',
-              icon: Icons.explore_rounded,
-              onTap: () => context.go('/'),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 120),
+        ],
       ),
     );
   }
 
   Widget _buildBookmarkCard(BuildContext context, WidgetRef ref, Bookmark bookmark) {
+    final String heroTag = 'bookmarks_media_${bookmark.mediaType}_${bookmark.id}';
     return PressableCard(
       onTap: () {
-        context.push('/details/${bookmark.mediaType}/${bookmark.id}');
+        context.push('/details/${bookmark.mediaType}/${bookmark.id}?heroTag=$heroTag');
       },
       onLongPress: () {
         MediaContextMenu.show(
@@ -175,9 +215,12 @@ class BookmarksPage extends ConsumerWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            TmdbImage(
-              path: bookmark.posterPath,
-              highResSize: 'w400',
+            Hero(
+              tag: heroTag,
+              child: TmdbImage(
+                path: bookmark.posterPath,
+                highResSize: 'w400',
+              ),
             ),
             Positioned(
               bottom: 0,

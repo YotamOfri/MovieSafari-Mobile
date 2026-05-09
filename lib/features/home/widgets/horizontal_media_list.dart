@@ -11,9 +11,10 @@ import '../../../widgets/pressable_card.dart';
 class HorizontalMediaList extends ConsumerWidget {
   final List<dynamic> items;
   final String? defaultType;
+  final String? heroPrefix;
 
   const HorizontalMediaList(
-      {super.key, required this.items, this.defaultType});
+      {super.key, required this.items, this.defaultType, this.heroPrefix});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,6 +35,7 @@ class HorizontalMediaList extends ConsumerWidget {
         final bool isFinished = entry?.isFinished ?? false;
         
         final isBookmarked = ref.watch(bookmarkProvider).any((b) => b.id == id && b.mediaType == type);
+        final String heroTag = '${heroPrefix ?? ''}media_${type}_$id';
 
         return Padding(
           padding: const EdgeInsets.only(right: 14.0),
@@ -42,7 +44,7 @@ class HorizontalMediaList extends ConsumerWidget {
             children: [
               Expanded(
                 child: PressableCard(
-                  onTap: () => context.push('/details/$type/$id'),
+                  onTap: () => context.push('/details/$type/$id?heroTag=$heroTag'),
                   onLongPress: () {
                     HapticFeedback.vibrate();
                     MediaContextMenu.show(context, ref, item, type);
@@ -59,7 +61,10 @@ class HorizontalMediaList extends ConsumerWidget {
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            TmdbImage(path: posterPath, highResSize: 'w400'),
+                            Hero(
+                              tag: heroTag,
+                              child: TmdbImage(path: posterPath, highResSize: 'w400'),
+                            ),
                             
                             // Finished Overlay
                             if (isFinished) ...[

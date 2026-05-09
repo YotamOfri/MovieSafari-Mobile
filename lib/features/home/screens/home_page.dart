@@ -169,7 +169,7 @@ class HomePage extends ConsumerWidget {
                   height: 195,
                   child: moviesAsync.when(
                     data: (movies) =>
-                        HorizontalMediaList(items: movies, defaultType: 'movie'),
+                        HorizontalMediaList(items: movies, defaultType: 'movie', heroPrefix: 'home_trending_movies_'),
                     loading: () => const SkeletonList(height: 195),
                     error: (e, s) => _ErrorWidget(message: '$e'),
                   ),
@@ -202,7 +202,7 @@ class HomePage extends ConsumerWidget {
                   height: 195,
                   child: seriesAsync.when(
                     data: (series) =>
-                        HorizontalMediaList(items: series, defaultType: 'tv'),
+                        HorizontalMediaList(items: series, defaultType: 'tv', heroPrefix: 'home_trending_series_'),
                     loading: () => const SkeletonList(height: 195),
                     error: (e, s) => _ErrorWidget(message: '$e'),
                   ),
@@ -223,7 +223,7 @@ class HomePage extends ConsumerWidget {
                   height: 230,
                   child: topRatedMoviesAsync.when(
                     data: (movies) =>
-                        TopTenMediaList(items: movies, defaultType: 'movie'),
+                        TopTenMediaList(items: movies, defaultType: 'movie', heroPrefix: 'home_top_movies_'),
                     loading: () => const SkeletonList(height: 230),
                     error: (e, s) => _ErrorWidget(message: '$e'),
                   ),
@@ -277,7 +277,7 @@ class HomePage extends ConsumerWidget {
                   height: 230,
                   child: topRatedSeriesAsync.when(
                     data: (series) =>
-                        TopTenMediaList(items: series, defaultType: 'tv'),
+                        TopTenMediaList(items: series, defaultType: 'tv', heroPrefix: 'home_top_series_'),
                     loading: () => const SkeletonList(height: 230),
                     error: (e, s) => _ErrorWidget(message: '$e'),
                   ),

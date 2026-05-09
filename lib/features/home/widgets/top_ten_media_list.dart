@@ -10,8 +10,9 @@ import '../../../widgets/pressable_card.dart';
 class TopTenMediaList extends ConsumerWidget {
   final List<dynamic> items;
   final String? defaultType;
+  final String? heroPrefix;
 
-  const TopTenMediaList({super.key, required this.items, this.defaultType});
+  const TopTenMediaList({super.key, required this.items, this.defaultType, this.heroPrefix});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,6 +32,7 @@ class TopTenMediaList extends ConsumerWidget {
             (item['vote_average'] as num?)?.toDouble() ?? 0.0;
         
         final isBookmarked = ref.watch(bookmarkProvider).any((b) => b.id == id && b.mediaType == type);
+        final String heroTag = '${heroPrefix ?? ''}media_${type}_$id';
 
         final Color rankColor = index == 0
             ? const Color(0xFFFFD700)
@@ -45,7 +47,7 @@ class TopTenMediaList extends ConsumerWidget {
           child: SizedBox(
             width: 140,
             child: PressableCard(
-              onTap: () => context.push('/details/$type/$id'),
+              onTap: () => context.push('/details/$type/$id?heroTag=$heroTag'),
               onLongPress: () {
                 HapticFeedback.vibrate();
                 MediaContextMenu.show(context, ref, item, type);
@@ -65,9 +67,12 @@ class TopTenMediaList extends ConsumerWidget {
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(16),
-                            child: TmdbImage(
-                              path: posterPath,
-                              highResSize: 'w342',
+                            child: Hero(
+                              tag: heroTag,
+                              child: TmdbImage(
+                                path: posterPath,
+                                highResSize: 'w342',
+                              ),
                             ),
                           ),
                           

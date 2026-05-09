@@ -14,6 +14,7 @@ class DetailsHeader extends StatelessWidget {
   final Map<String, dynamic> details;
   final int? continueSeason;
   final int? continueEpisode;
+  final String? heroTag;
 
   const DetailsHeader({
     super.key,
@@ -22,6 +23,7 @@ class DetailsHeader extends StatelessWidget {
     required this.details,
     this.continueSeason,
     this.continueEpisode,
+    this.heroTag,
   });
 
   @override
@@ -140,7 +142,41 @@ class DetailsHeader extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (!isCollapsed)
+                if (!isCollapsed) ...[
+                  // Floating Poster for Hero Animation landing
+                  Positioned(
+                    left: 20,
+                    bottom: 20,
+                    child: Hero(
+                      tag: heroTag ?? 'media_${type}_$id',
+                      child: Container(
+                        width: 100,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: TmdbImage(
+                            path: details['poster_path'],
+                            highResSize: 'w400',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
                   Center(
                     child: GestureDetector(
                       onTap: () {
@@ -190,6 +226,7 @@ class DetailsHeader extends StatelessWidget {
                       ),
                     ),
                   ),
+                ],
               ],
             ),
           );
